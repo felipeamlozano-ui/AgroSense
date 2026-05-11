@@ -1,37 +1,44 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="pt-br">
-<head>
+  <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <title>{% block title %}AgroSense - Sistema Inteligente de Solo{% endblock %}</title>
+    <title>
+      {% block title %}AgroSense - Sistema Inteligente de Solo{% endblock %}
+    </title>
 
     <meta name="theme-color" content="#050816" />
-    <meta name="description" content="Sistema inteligente de monitoramento e análise do solo para agricultura e ensino técnico" />
+    <meta
+      name="description"
+      content="Sistema inteligente de monitoramento e análise do solo para agricultura e ensino técnico"
+    />
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
 
-    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'css/base.css' %}" />
 
     {% block extra_css %}{% endblock %}
-</head>
+  </head>
 
-<body>
-
+  <body>
     <!-- PRELOADER -->
 
     <div id="preloader">
-        <div class="loader-wrapper">
-            <div class="loader-ring"></div>
-            <div class="loader-ring delay"></div>
-            <div class="loader-core"></div>
+      <div class="loader-wrapper">
+        <div class="loader-ring"></div>
+        <div class="loader-ring delay"></div>
+        <div class="loader-core"></div>
 
-            <h1 class="loader-text">AGROSENSE</h1>
-        </div>
+        <h1 class="loader-text">AGROSENSE</h1>
+      </div>
     </div>
 
     <!-- BACKGROUND -->
@@ -49,199 +56,205 @@
     <!-- NAVBAR -->
 
     <header class="navbar glass">
-        <div class="nav-container">
+      <div class="nav-container">
+        <a href="/" class="logo">
+          <span class="logo-dot"></span>
+          AGROSENSE
+        </a>
 
-            <a href="/" class="logo">
-                <span class="logo-dot"></span>
-                AGROSENSE
-            </a>
+        <nav class="desktop-nav">
+          <a href="#">Sistema</a>
+          <a href="#">Monitoramento</a>
+          <a href="#">Análises</a>
+          <a href="#">Pesquisa</a>
+          <a href="#">Contato</a>
+        </nav>
 
-            <nav class="desktop-nav">
-                <a href="#">Sistema</a>
-                <a href="#">Monitoramento</a>
-                <a href="#">Análises</a>
-                <a href="#">Pesquisa</a>
-                <a href="#">Contato</a>
-            </nav>
-
-            <div class="nav-actions">
-
-                <button class="holo-btn">
-                    <span>Iniciar sistema</span>
-                </button>
-
-                <button class="menu-toggle" id="menuToggle">
-                    <span></span>
-                    <span></span>
-                </button>
-
-            </div>
+        <div class="nav-actions">
+          <button class="menu-toggle" id="menuToggle">
+            <span></span>
+            <span></span>
+          </button>
         </div>
+      </div>
 
-        <!-- MOBILE MENU -->
+      <!-- MOBILE MENU -->
 
-        <div class="mobile-menu" id="mobileMenu">
-            <a href="#">Sistema</a>
-            <a href="#">Monitoramento</a>
-            <a href="#">Análises</a>
-            <a href="#">Pesquisa</a>
-            <a href="#">Contato</a>
-
-            <button class="holo-btn mobile-btn">
-                <span>Acessar sistema</span>
-            </button>
-        </div>
-
+      <div class="mobile-menu" id="mobileMenu">
+        <a href="hero">Sistema</a>
+        <a href="#">Monitoramento</a>
+        <a href="#">Análises</a>
+        <a href="#">Pesquisa</a>
+        <a href="#">Contato</a>
+      </div>
     </header>
 
     <!-- HERO -->
 
     <main>
+      <section class="hero">
+        <div class="hero-grid"></div>
 
-        <section class="hero">
+        <div class="hero-content">
+          <div class="eyebrow reveal">
+            SISTEMA INTELIGENTE DE MONITORAMENTO DO SOLO
+          </div>
 
-            <div class="hero-grid"></div>
+          <h1 class="hero-title reveal">
+            Agricultura
+            <span>inteligente</span>
+            orientada por dados.
+          </h1>
 
-            <div class="hero-content">
+          <p class="hero-subtitle reveal">
+            Plataforma tecnológica voltada à análise de solo em tempo real,
+            desenvolvida para apoiar produtores rurais e instituições de ensino
+            na tomada de decisões mais precisas e sustentáveis. O sistema
+            monitora e interpreta parâmetros essenciais como umidade, pH e
+            temperatura do solo, permitindo uma visão contínua das condições
+            ambientais. Com base nesses dados, a plataforma fornece
+            recomendações inteligentes para otimização do uso da água, melhoria
+            da qualidade do solo e aplicação adequada de insumos agrícolas,
+            contribuindo para maior produtividade e eficiência no manejo. Além
+            disso, incentiva a análise constante do solo por meio de sugestões
+            de produtos e práticas agrícolas, promovendo um cultivo mais
+            tecnológico, sustentável e orientado por dados.
+          </p>
 
-                <div class="eyebrow reveal">
-                    SISTEMA INTELIGENTE DE MONITORAMENTO DO SOLO
-                </div>
+          <div class="hero-actions reveal">
+            <button class="holo-btn large BUTAOGRANDE">
+              <span>Nova análise</span>
+            </button>
+          </div>
+        </div>
 
-                <h1 class="hero-title reveal">
-                    Agricultura
-                    <span>inteligente</span>
-                    orientada por dados.
-                </h1>
+        <!-- FLOATING CARDS -->
 
-                <p class="hero-subtitle reveal">
-                    Plataforma desenvolvida para análise de solo em tempo real, auxiliando produtores e instituições de ensino no uso eficiente de água, pH e temperatura.
-                </p>
+        <div class="floating-ui">
+          <div class="floating-card tilt-card">
+            <div class="card-glow"></div>
 
-                <div class="hero-actions reveal">
-
-                    <button class="holo-btn large BUTAOGRANDE">
-                        <span>Nova análise</span>
-                    </button>
-
-
-                </div>
-
+            <div class="card-header">
+              <span class="status-dot"></span>
+              Monitoramento do solo
             </div>
 
-            <!-- FLOATING CARDS -->
+            <h3>AgroSense System</h3>
 
-            <div class="floating-ui">
+            <p>
+              Sistema de análise de pH, umidade e temperatura com geração de
+              recomendações automáticas.
+            </p>
 
-                <div class="floating-card tilt-card">
-                    <div class="card-glow"></div>
+            <div class="card-lines"></div>
+          </div>
 
-                    <div class="card-header">
-                        <span class="status-dot"></span>
-                        Monitoramento do solo
-                    </div>
+          <div class="floating-card small tilt-card">
+            <div class="card-glow"></div>
 
-                    <h3>AgroSense AI</h3>
-
-                    <p>
-                        Sistema de análise de pH, umidade e temperatura com geração de recomendações automáticas.
-                    </p>
-
-                    <div class="card-lines"></div>
-                </div>
-
-                <div class="floating-card small tilt-card">
-                    <div class="card-glow"></div>
-
-                    <div class="metric">
-                        <span>Tempo de resposta</span>
-                        <strong>0.3s</strong>
-                    </div>
-                </div>
-
+            <div class="metric">
+              <span>Tempo de processamento</span>
+              <strong> > 1s</strong>
             </div>
+          </div>
+        </div>
 
-            <div class="hero-light"></div>
-
-        </section>
-
-        <!-- FEATURES -->
-
-        <section class="features">
-
-            <div class="section-heading reveal">
-                <span>SISTEMA EDUCACIONAL</span>
-                <h2>Projeto de análise e monitoramento agrícola.</h2>
+        <div class="hero-light"></div>
+      </section>
+      <section>
+        <div class="section-heading reveal"><h2>Exemplos de Análises</h2></div>
+        <div class="dadosderelatorio">
+          <div>
+            <h4>Amostra Fornecida</h4>
+            <div>
+              <!-- Dados aqui -->
+              Terra Molhada
             </div>
-
-            <div class="feature-grid">
-
-                <article class="feature-card tilt-card reveal">
-                    <div class="feature-icon"></div>
-                    <h3>Análise de Solo</h3>
-                    <p>
-                        Processamento de dados de umidade, pH e temperatura em tempo real.
-                    </p>
-                </article>
-
-                <article class="feature-card tilt-card reveal">
-                    <div class="feature-icon"></div>
-                    <h3>Tomada de decisão</h3>
-                    <p>
-                        Geração de recomendações para irrigação e correção do solo.
-                    </p>
-                </article>
-
-                <article class="feature-card tilt-card reveal">
-                    <div class="feature-icon"></div>
-                    <h3>Educação técnica</h3>
-                    <p>
-                        Ferramenta aplicada ao ensino de tecnologia e agricultura inteligente.
-                    </p>
-                </article>
-
+          </div>
+          <div>
+            <h4>Dados Fornecidos</h4>
+            <div>
+              <!-- Dados aqui -->
+              PH: 7; Umidade: 70%; Temperatura: 25°C
             </div>
+          </div>
+          <div>
+            <h4>Recomendação</h4>
+            <div>
+              <!-- Dados aqui -->
+                Irrigar moderadamente e aplicar fertilizante NPK 10-10-10
+            </div>
+          </div>
+        </div>
+      </section>
+      <!-- FEATURES -->
 
-        </section>
+      <section class="features">
+        <div class="section-heading reveal">
+          <span>SISTEMA EDUCACIONAL</span>
+          <h2>Projeto de análise e monitoramento agrícola.</h2>
+        </div>
 
-        {% block content %}
-        {% endblock %}
+        <div class="feature-grid">
+          <article class="feature-card tilt-card reveal">
+            <div class="feature-icon"><img src="/media/image.png" /></div>
+            <h3>Análise de Solo</h3>
+            <p>
+              Processamento de dados de umidade, pH e temperatura em tempo real.
+            </p>
+          </article>
 
+          <article class="feature-card tilt-card reveal">
+            <div class="feature-icon"><img src="/media/image2.png" /></div>
+            <h3>Tomada de decisão</h3>
+            <p>Geração de recomendações para irrigação e correção do solo.</p>
+          </article>
+
+          <article class="feature-card tilt-card reveal">
+            <div class="feature-icon"><img src="/media/image1.png" /></div>
+            <h3>Educação técnica</h3>
+            <p>
+              Ferramenta aplicada ao ensino de tecnologia e agricultura
+              inteligente.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      {% block content %} {% endblock %}
     </main>
 
     <!-- FOOTER -->
 
     <footer class="footer">
-
-        <div class="footer-grid">
-
-            <div>
-                <h3>AGROSENSE</h3>
-                <p>
-                    Sistema inteligente de monitoramento e análise do solo para agricultura moderna e ensino técnico.
-                </p>
-            </div>
-
-            <div>
-                <h4>Projeto</h4>
-                <a href="#">Monitoramento</a>
-                <a href="#">Análise de seios</a>
-                <a href="#">Recomendações</a>
-            </div>
-
-            <div>
-                <h4>Instituição</h4>
-                <a href="#">IFSULDEMINAS</a>
-                <a href="#">Curso Técnico em Informática</a>
-                <a href="#">PSOO</a>
-            </div>
-
+      <div class="footer-grid">
+        <div>
+          <h3>AGROSENSE</h3>
+          <p>
+            Sistema inteligente de monitoramento e análise do solo para
+            agricultura moderna e ensino técnico.
+          </p>
         </div>
 
-        <div class="footer-bottom">
-            © 2026 AgroSense - Pau do paulo cesar
+        <div>
+          <h4>Projeto</h4>
+          <a href="#">Monitoramento</a>
+          <a href="#">Análise de seios</a>
+          <a href="#">Recomendações</a>
         </div>
 
+        <div>
+          <h4>Instituição</h4>
+          <a class="botao-rodape" href="#">IFSULDEMINAS</a>
+          <a class="botao-rodape" href="#">Curso Técnico em Informática</a>
+          <a class="botao-rodape" href="#">PSOO</a>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        © 2026 AgroSense - Projeto Academico IFSULDEMINAS Muzambinho. Todos os
+        direitos reservados.
+      </div>
     </footer>
 
     <!-- LIBRARIES -->
@@ -257,6 +270,5 @@
     <script src="{% static 'js/base.js' %}"></script>
 
     {% block extra_js %}{% endblock %}
-
-</body>
+  </body>
 </html>
