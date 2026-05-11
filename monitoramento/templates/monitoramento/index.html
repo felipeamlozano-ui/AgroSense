@@ -161,32 +161,89 @@
 
         <div class="hero-light"></div>
       </section>
-      <section>
-        <div class="section-heading reveal"><h2>Exemplos de Análises</h2></div>
-        <div class="dadosderelatorio">
-          <div>
+      <div class="section-heading reveal">
+        <h2>Exemplos de Análises</h2>
+    </div>
+    
+    <div class="dadosderelatorio">
+        <div>
             <h4>Amostra Fornecida</h4>
-            <div>
-              <!-- Dados aqui -->
-              Terra Molhada
-            </div>
-          </div>
-          <div>
-            <h4>Dados Fornecidos</h4>
-            <div>
-              <!-- Dados aqui -->
-              PH: 7; Umidade: 70%; Temperatura: 25°C
-            </div>
-          </div>
-          <div>
-            <h4>Recomendação</h4>
-            <div>
-              <!-- Dados aqui -->
-                Irrigar moderadamente e aplicar fertilizante NPK 10-10-10
-            </div>
-          </div>
+            <div>Terra Molhada</div>
         </div>
-      </section>
+        <div>
+            <h4>Dados Fornecidos</h4>
+            <div>PH: 7 | Umidade: 70% | Temp: 25°C</div>
+        </div>
+        <div>
+            <h4>Recomendação</h4>
+            <div>Irrigar moderadamente e fertilizar</div>
+        </div>
+    </div>
+    
+    <div class="infografico-container">
+        
+        <div class="info-step">
+            <div class="icon-circle"></div>
+            <span class="step-label">Entrada</span>
+            <div class="step-value">Inserção dos Dados</div>
+        </div>
+    
+        <div class="connector">➔</div>
+    
+        <div class="info-step" style="border-color: #1976d2;">
+            <div class="icon-circle" style="background: var(--secondary); box-shadow: 0 0 15px var(--secondary);">📊</div>
+            <span class="step-label">Análise</span>
+            <div class="step-value">PH: 6.5 | Umidade: 25% | Temp: 28°C</div>
+        </div>
+    
+        <div class="connector">➔</div>
+    
+        <div class="info-step">
+            <div class="icon-circle" style="background: #f57c00; box-shadow: 0 0 15px #f57c00;"></div>
+            <span class="step-label">Ação</span>
+            <div class="step-value">Uso de NPK 10-10-10 e Irrigação Leve</div>
+        </div>
+        
+    </div>
+    <div class="grafico-container">
+        <div class="grafico-titulo">Análise de Indicadores (Métrica Ideal vs. Atual)</div>
+    
+        <div class="linha-grafico">
+            <div class="label-info">
+                <span>Nível de Umidade</span>
+                <span>25%% (Muito Baixa)</span>
+            </div>
+            <div class="barra-fundo">
+                <div class="barra-progresso bg-umidade" style="width: 25%;"></div> <div class="barra-progresso bg-ph" style="width: 95%;"></div>      <div class="barra-progresso bg-nutrientes" style="width: 30%;"></div>
+            </div>
+        </div>
+    
+        <div class="linha-grafico">
+            <div class="label-info">
+                <span>Equilíbrio de pH (Alvo: 6.5 - 7.0)</span>
+                <span>100% de Adequação</span>
+            </div>
+            <div class="barra-fundo">
+                <div class="barra-progresso bg-ph"></div>
+            </div>
+        </div>
+    
+        <div class="linha-grafico">
+            <div class="label-info">
+                <span>Disponibilidade de NPK (Nitrogênio, Fósforo, Potássio)</span>
+                <span>45% (Necessita Suplementação)</span>
+            </div>
+            <div class="barra-fundo">
+                <div class="barra-progresso bg-nutrientes"></div>
+            </div>
+        </div>
+    
+        <div class="legenda-grafico">
+            <div class="legenda-item"><span class="ponto" style="background: #4caf50;"></span> Ideal</div>
+            <div class="legenda-item"><span class="ponto" style="background: #fbc02d;"></span> Atenção</div>
+            <div class="legenda-item"><span class="ponto" style="background: #1976d2;"></span> Estável</div>
+        </div>
+    </div>
       <!-- FEATURES -->
 
       <section class="features">
