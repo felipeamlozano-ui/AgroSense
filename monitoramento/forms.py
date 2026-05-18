@@ -1,12 +1,17 @@
+from django.contrib.auth.forms import AuthenticationForm
 from django import forms
 
-from .models import Analise
+class CustomLoginForm(AuthenticationForm):
+    username = forms.CharField(
+        widget=forms.TextInput(attrs={
+            "class": "input-login",
+            "placeholder": "Digite seu email"
+        })
+    )
 
-
-class AnaliseForm(forms.ModelForm):
-
-    class Meta:
-
-        model = Analise
-
-        fields = '__all__'
+    password = forms.CharField(
+        widget=forms.PasswordInput(attrs={
+            "class": "input-login",
+            "placeholder": "Digite sua senha"
+        })
+    )

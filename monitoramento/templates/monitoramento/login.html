@@ -1,0 +1,219 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>
+      {% block title %}AgroSense - Sistema Inteligente de Solo{% endblock %}
+    </title>
+
+    <meta name="theme-color" content="#050816" />
+    <meta
+      name="description"
+      content="Sistema inteligente de monitoramento e análise do solo para agricultura e ensino técnico"
+    />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+
+    <link rel="stylesheet" href="{% static 'css/base.css' %}" />
+
+    {% block extra_css %}{% endblock %}
+  </head>
+
+  <body>
+    <!-- PRELOADER -->
+
+    <div id="preloader">
+      <div class="loader-wrapper">
+        <div class="loader-ring"></div>
+        <div class="loader-ring delay"></div>
+        <div class="loader-core"></div>
+
+        <h1 class="loader-text">AGROSENSE</h1>
+      </div>
+    </div>
+
+    <!-- BACKGROUND -->
+
+    <div id="webgl-container"></div>
+
+    <div class="noise-overlay"></div>
+
+    <div class="gradient-orb orb-1"></div>
+    <div class="gradient-orb orb-2"></div>
+    <div class="gradient-orb orb-3"></div>
+
+    <canvas id="particle-canvas"></canvas>
+
+    <!-- NAVBAR -->
+
+    <header class="navbar glass">
+      <div class="nav-container">
+        <a href="/" class="logo">
+          <span class="logo-dot"></span>
+          AGROSENSE
+        </a>
+
+        <div class="nav-actions">
+          <button class="menu-toggle" id="menuToggle">
+            <span></span>
+            <span></span>
+          </button>
+          <div class="auth-status">
+            {% if user.is_authenticated %}
+            <span class="status-dot online"></span>
+            <span class="status-text">Logado</span>
+            {% else %}
+            <span class="status-dot offline"></span>
+            <span class="status-text">Deslogado</span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- MOBILE MENU -->
+
+      <div class="mobile-menu" id="mobileMenu">
+        <a href="#hero">Sistema</a>
+        <a href="{% url 'monitoramento' %}">Monitoramento</a>
+        <a href="#hero1">Análises</a>
+        <a href="{% url 'login' %}">Login</a>
+        <a href="#rodape2">Contato</a>
+      </div>
+    </header>
+
+    <!-- HERO -->
+
+    <main>
+      <section id="hero" class="hero">
+        <div class="hero-grid"></div>
+
+        <!-- FLOATING CARDS -->
+
+        <div class="floating-ui">
+          <div class="floating-card tilt-card">
+            <div class="card-glow"></div>
+
+            <div class="card-header">
+              <span class="status-dot"></span>
+              Como funciona o Login?
+            </div>
+
+            <h3>Sistema de Acordo com a LGPD</h3>
+
+            <p>
+              A LGPD (Lei Geral de Proteção de Dados) garante mais segurança,
+              privacidade e transparência no tratamento de dados pessoais,
+              assegurando que as informações dos usuários sejam coletadas e
+              utilizadas de forma responsável e protegida.
+            </p>
+
+            <div class="card-lines"></div>
+          </div>
+
+          <div class="floating-card small tilt-card">
+            <div class="card-glow"></div>
+
+            <div class="metric">
+              <span>Privacidade e Segurança</span>
+              <strong>- Foco no Usuário</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="hero-light"></div>
+        <section class="login-section">
+          <div class="login-card">
+            <h1 class="login-title">Entrar no AgroSense</h1>
+
+            <p class="login-subtitle">
+              Acesse sua plataforma de monitoramento agrícola.
+            </p>
+            {% if form.non_field_errors %}
+            <div class="login-error">
+              {% for error in form.non_field_errors %} {{ error }} {% endfor %}
+            </div>
+            {% endif %}
+            <form method="POST" class="login-form">
+              {% csrf_token %}
+
+              <div class="input-group">
+                <label>Email</label>
+                {{ form.username }}
+              </div>
+
+              <div class="input-group">
+                <label>Senha</label>
+                {{ form.password }}
+              </div>
+
+              <button type="submit" class="login-btn">Entrar</button>
+              <button type="submit" class="login-btn">Cadastrar</button>
+            </form>
+          </div>
+        </section>
+      </section>
+      {% block content %} {% endblock %}
+    </main>
+
+    <!-- FOOTER -->
+
+    <footer class="footer">
+      <div class="footer-grid">
+        <div>
+          <h3>AGROSENSE</h3>
+          <p>
+            Plataforma inteligente de monitoramento e análise de solo em tempo
+            real, desenvolvida para auxiliar produtores rurais e instituições de
+            ensino na tomada de decisões mais precisas, sustentáveis e
+            eficientes, utilizando dados como umidade, pH e temperatura para
+            gerar recomendações agrícolas e otimizar o manejo do cultivo.
+          </p>
+        </div>
+
+        <div id="rodape1">
+          <h4>Projeto</h4>
+          <hr />
+          <a href="{% url 'monitoramento' %}" class="texto_rodape">
+            Monitoramento
+          </a>
+          <a href="#hero1" class="texto_rodape">Análise de solo</a>
+          <a class="texto_rodape">Recomendações</a>
+        </div>
+
+        <div id="rodape2">
+          <h4>Contato</h4>
+          <p class="texto_rodape1">Tel: (35) 988242754</p>
+          <p class="texto_rodape1">felipe.a.m.lozano@gmail.com</p>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        © 2026 AgroSense - Projeto Academico IFSULDEMINAS Muzambinho. Todos os
+        direitos reservados.
+      </div>
+    </footer>
+
+    <!-- LIBRARIES -->
+
+    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.1/vanilla-tilt.min.js"></script>
+
+    <script src="{% static 'js/base.js' %}"></script>
+
+    {% block extra_js %}{% endblock %}
+  </body>
+</html>

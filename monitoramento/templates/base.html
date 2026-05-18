@@ -1,7 +1,7 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="pt-br">
-<head>
+  <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
@@ -12,33 +12,34 @@
     <meta name="description" content="Futuristic AI/Web3 Interface" />
 
     <!-- FONTS -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
 
     <!-- CSS -->
-    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'css/base.css' %}" />
 
     {% block extra_css %}{% endblock %}
-</head>
+  </head>
 
-<body>
-
+  <body>
     <!-- ========================================= -->
     <!-- PRELOADER -->
     <!-- ========================================= -->
 
     <div id="preloader">
-        <div class="loader-wrapper">
-            <div class="loader-ring"></div>
-            <div class="loader-ring delay"></div>
-            <div class="loader-core"></div>
+      <div class="loader-wrapper">
+        <div class="loader-ring"></div>
+        <div class="loader-ring delay"></div>
+        <div class="loader-core"></div>
 
-            <h1 class="loader-text">NEURAL</h1>
-        </div>
+        <h1 class="loader-text">NEURAL</h1>
+      </div>
     </div>
-
 
     <!-- ========================================= -->
     <!-- BACKGROUND FX -->
@@ -48,8 +49,6 @@
 
     <div class="noise-overlay"></div>
 
-    
-
     <canvas id="particle-canvas"></canvas>
 
     <!-- ========================================= -->
@@ -57,49 +56,119 @@
     <!-- ========================================= -->
 
     <header class="navbar glass">
-        <div class="nav-container">
+      <div class="nav-container">
+        <a href="/" class="logo">
+          <span class="logo-dot"></span>
+          NEURAL
+        </a>
 
-            <a href="/" class="logo">
-                <span class="logo-dot"></span>
-                NEURAL
-            </a>
+        <nav class="desktop-nav">
+          <a href="#">Platform</a>
+          <a href="#">Technology</a>
+          <a href="#">Solutions</a>
+          <a href="#">Research</a>
+          <a href="#">Contact</a>
+        </nav>
 
-            <nav class="desktop-nav">
-                <a href="#">Platform</a>
-                <a href="#">Technology</a>
-                <a href="#">Solutions</a>
-                <a href="#">Research</a>
-                <a href="#">Contact</a>
-            </nav>
+        <div class="nav-actions">
+          <!-- NOTIFICAÇÕES -->
+          <div class="notification-wrapper" id="notificationWrapper">
+            <button class="notification-btn" id="notificationBtn">
+              <!-- ÍCONE -->
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2z"
+                  fill="white"
+                />
+                <path
+                  d="M18 16v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5S10.5 3.17 10.5 4v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"
+                  fill="white"
+                />
+              </svg>
 
-            <div class="nav-actions">
-
-                <button class="holo-btn">
-                    <span>Launch App</span>
-                </button>
-
-                <button class="menu-toggle" id="menuToggle">
-                    <span></span>
-                    <span></span>
-                </button>
-
-            </div>
-        </div>
-
-        <!-- MOBILE MENU -->
-
-        <div class="mobile-menu" id="mobileMenu">
-            <a href="#">Platform</a>
-            <a href="#">Technology</a>
-            <a href="#">Solutions</a>
-            <a href="#">Research</a>
-            <a href="#">Contact</a>
-
-            <button class="holo-btn mobile-btn">
-                <span>Launch App</span>
+              {% if user.is_authenticated and notificacoes_nao_lidas > 0 %}
+              <span class="notification-badge">
+                {{ notificacoes_nao_lidas }}
+              </span>
+              {% endif %}
             </button>
-        </div>
 
+            <div class="notification-dropdown" id="notificationDropdown">
+              <div class="notification-header">
+                <strong>Notificações</strong>
+                <span class="mark-all">Marcar como lidas</span>
+              </div>
+
+              <div class="notification-list">
+                {% if user.is_authenticated %}
+                {% if notificacoes %}
+              
+                  {% for n in notificacoes %}
+                    <div class="notification-item {% if not n.lida %}unread{% endif %}">
+                      <div class="dot"></div>
+              
+                      <div class="text">
+                        {{ n.mensagem }}
+                        <small>{{ n.data_envio|timesince }} atrás</small>
+                      </div>
+                    </div>
+              
+                  {% empty %}
+                    <div class="notification-item">
+                      <div class="text">Nenhuma notificação</div>
+                    </div>
+              
+                  {% endfor %}
+              
+                {% else %}
+                  <div class="notification-item">
+                    <div class="text">Nenhuma notificação</div>
+                  </div>
+                {% endif %}
+              
+              {% else %}
+                <div class="notification-item">
+                  <div class="text">Faça login para ver notificações</div>
+                </div>
+              {% endif %}
+              </div>
+            </div>
+          </div>
+          <!-- STATUS LOGIN -->
+          <div class="auth-status">
+            {% if user.is_authenticated %}
+            <span class="status-dot online"></span>
+            <span class="status-text">Logado</span>
+            {% else %}
+            <span class="status-dot offline"></span>
+            <span class="status-text">Deslogado</span>
+            {% endif %}
+          </div>
+
+          <button class="holo-btn">
+            <span>Launch App</span>
+          </button>
+
+          <button class="menu-toggle" id="menuToggle">
+            <span></span>
+            <span></span>
+          </button>
+        </div>
+      </div>
+
+      <!-- MOBILE MENU -->
+
+      <div class="mobile-menu" id="mobileMenu">
+        <a href="#">Platform</a>
+        <a href="#">Technology</a>
+        <a href="#">Solutions</a>
+        <a href="#">Research</a>
+        <a href="#">Contact</a>
+
+        <button class="holo-btn mobile-btn">
+          <span>Launch App</span>
+        </button>
+      </div>
     </header>
 
     <!-- ========================================= -->
@@ -107,124 +176,105 @@
     <!-- ========================================= -->
 
     <main>
+      <section class="hero">
+        <div class="hero-grid"></div>
 
-        <section class="hero">
+        <div class="hero-content">
+          <div class="eyebrow reveal">NEXT GEN AI + WEB3 INFRASTRUCTURE</div>
 
-            <div class="hero-grid"></div>
+          <h1 class="hero-title reveal">
+            Build
+            <span>immersive</span>
+            digital realities.
+          </h1>
 
-            <div class="hero-content">
+          <p class="hero-subtitle reveal">
+            Futuristic AI systems, fluid WebGL experiences and intelligent
+            infrastructure engineered for the next generation of digital
+            products.
+          </p>
 
-                <div class="eyebrow reveal">
-                    NEXT GEN AI + WEB3 INFRASTRUCTURE
-                </div>
+          <div class="hero-actions reveal">
+            <button class="holo-btn large">
+              <span>Start Building</span>
+            </button>
 
-                <h1 class="hero-title reveal">
-                    Build
-                    <span>immersive</span>
-                    digital
-                    realities.
-                </h1>
+            <button class="ghost-btn">Explore Ecosystem</button>
+          </div>
+        </div>
 
-                <p class="hero-subtitle reveal">
-                    Futuristic AI systems, fluid WebGL experiences and intelligent infrastructure engineered for the next generation of digital products.
-                </p>
+        <!-- FLOATING CARDS -->
 
-                <div class="hero-actions reveal">
+        <div class="floating-ui">
+          <div class="floating-card tilt-card">
+            <div class="card-glow"></div>
 
-                    <button class="holo-btn large">
-                        <span>Start Building</span>
-                    </button>
-
-                    <button class="ghost-btn">
-                        Explore Ecosystem
-                    </button>
-
-                </div>
-
+            <div class="card-header">
+              <span class="status-dot"></span>
+              AI Processing
             </div>
 
-            <!-- FLOATING CARDS -->
+            <h3>Neural Mesh</h3>
 
-            <div class="floating-ui">
+            <p>
+              Real-time distributed intelligence running across adaptive edge
+              networks.
+            </p>
 
-                <div class="floating-card tilt-card">
-                    <div class="card-glow"></div>
+            <div class="card-lines"></div>
+          </div>
 
-                    <div class="card-header">
-                        <span class="status-dot"></span>
-                        AI Processing
-                    </div>
+          <div class="floating-card small tilt-card">
+            <div class="card-glow"></div>
 
-                    <h3>Neural Mesh</h3>
-
-                    <p>
-                        Real-time distributed intelligence running across adaptive edge networks.
-                    </p>
-
-                    <div class="card-lines"></div>
-                </div>
-
-                <div class="floating-card small tilt-card">
-                    <div class="card-glow"></div>
-
-                    <div class="metric">
-                        <span>Latency</span>
-                        <strong>0.8ms</strong>
-                    </div>
-                </div>
-
+            <div class="metric">
+              <span>Latency</span>
+              <strong>0.8ms</strong>
             </div>
+          </div>
+        </div>
 
-            <!-- HERO LIGHT -->
+        <!-- HERO LIGHT -->
 
-            <div class="hero-light"></div>
+        <div class="hero-light"></div>
+      </section>
 
-        </section>
+      <!-- ========================================= -->
+      <!-- FEATURES -->
+      <!-- ========================================= -->
 
-        <!-- ========================================= -->
-        <!-- FEATURES -->
-        <!-- ========================================= -->
+      <section class="features">
+        <div class="section-heading reveal">
+          <span>FUTURE SYSTEMS</span>
+          <h2>Built for cinematic digital experiences.</h2>
+        </div>
 
-        <section class="features">
+        <div class="feature-grid">
+          <article class="feature-card tilt-card reveal">
+            <div class="feature-icon"></div>
+            <h3>Realtime AI</h3>
+            <p>
+              GPU accelerated intelligence with adaptive neural orchestration.
+            </p>
+          </article>
 
-            <div class="section-heading reveal">
-                <span>FUTURE SYSTEMS</span>
-                <h2>Built for cinematic digital experiences.</h2>
-            </div>
+          <article class="feature-card tilt-card reveal">
+            <div class="feature-icon"></div>
+            <h3>Fluid Motion</h3>
+            <p>Hyper smooth interfaces with cinematic transitions and depth.</p>
+          </article>
 
-            <div class="feature-grid">
+          <article class="feature-card tilt-card reveal">
+            <div class="feature-icon"></div>
+            <h3>Web3 Infrastructure</h3>
+            <p>
+              Decentralized systems designed for scalable future ecosystems.
+            </p>
+          </article>
+        </div>
+      </section>
 
-                <article class="feature-card tilt-card reveal">
-                    <div class="feature-icon"></div>
-                    <h3>Realtime AI</h3>
-                    <p>
-                        GPU accelerated intelligence with adaptive neural orchestration.
-                    </p>
-                </article>
-
-                <article class="feature-card tilt-card reveal">
-                    <div class="feature-icon"></div>
-                    <h3>Fluid Motion</h3>
-                    <p>
-                        Hyper smooth interfaces with cinematic transitions and depth.
-                    </p>
-                </article>
-
-                <article class="feature-card tilt-card reveal">
-                    <div class="feature-icon"></div>
-                    <h3>Web3 Infrastructure</h3>
-                    <p>
-                        Decentralized systems designed for scalable future ecosystems.
-                    </p>
-                </article>
-
-            </div>
-
-        </section>
-
-        {% block content %}
-        {% endblock %}
-
+      {% block content %} {% endblock %}
     </main>
 
     <!-- ========================================= -->
@@ -232,36 +282,32 @@
     <!-- ========================================= -->
 
     <footer class="footer">
-
-        <div class="footer-grid">
-
-            <div>
-                <h3>NEURAL</h3>
-                <p>
-                    Advanced interfaces for the next generation of digital products.
-                </p>
-            </div>
-
-            <div>
-                <h4>Technology</h4>
-                <a href="#">AI Engine</a>
-                <a href="#">Quantum Cloud</a>
-                <a href="#">Realtime Mesh</a>
-            </div>
-
-            <div>
-                <h4>Company</h4>
-                <a href="#">About</a>
-                <a href="#">Careers</a>
-                <a href="#">Research</a>
-            </div>
-
+      <div class="footer-grid">
+        <div>
+          <h3>NEURAL</h3>
+          <p>
+            Advanced interfaces for the next generation of digital products.
+          </p>
         </div>
 
-        <div class="footer-bottom">
-            © 2026 Neural Industries. All rights reserved.
+        <div>
+          <h4>Technology</h4>
+          <a href="#">AI Engine</a>
+          <a href="#">Quantum Cloud</a>
+          <a href="#">Realtime Mesh</a>
         </div>
 
+        <div>
+          <h4>Company</h4>
+          <a href="#">About</a>
+          <a href="#">Careers</a>
+          <a href="#">Research</a>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        © 2026 Neural Industries. All rights reserved.
+      </div>
     </footer>
 
     <!-- ========================================= -->
@@ -274,13 +320,11 @@
 
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
 
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.1/vanilla-tilt.min.js"></script>
 
     <!-- JS -->
     <script src="{% static 'js/base.js' %}"></script>
 
     {% block extra_js %}{% endblock %}
-
-</body>
+  </body>
 </html>

@@ -252,7 +252,16 @@ window.addEventListener("scroll", () => {
     }
 
 })
-// Botao de analise
-document.querySelector(".BUTAOGRANDE").addEventListener("click", () => {
-    window.location.href = "/cadastrar/"
-})
+const wrapper = document.getElementById("notificationWrapper");
+const btn = document.getElementById("notificationBtn");
+
+btn.addEventListener("click", (e) => {
+  e.stopPropagation();
+  wrapper.classList.toggle("active");
+});
+
+document.addEventListener("click", (e) => {
+  if (!wrapper.contains(e.target)) {
+    wrapper.classList.remove("active");
+  }
+});
