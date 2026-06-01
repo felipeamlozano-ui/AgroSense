@@ -266,7 +266,6 @@ body {
 .glass {
   background: rgba(255, 255, 255, 0.05);
 }
-
 .nav-container {
   display: flex;
   align-items: center;
@@ -1296,3 +1295,122 @@ body {
   border-radius: 50%;
   margin-top: 6px;
 }
+
+.toast-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.toast-card {
+  background: rgba(255, 170, 0, 0.1); /* Laranja suave */
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 170, 0, 0.3);
+  color: #ffaa00;
+  padding: 16px 20px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 300px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  animation: slideIn 0.3s ease forwards;
+}
+
+/* Se a mensagem for de sucesso, muda pra verde */
+.toast-card.success {
+  background: rgba(0, 255, 135, 0.1);
+  border-color: rgba(0, 255, 135, 0.3);
+  color: #00ff87;
+}
+
+.toast-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.toast-content p {
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.toast-close {
+  background: transparent;
+  border: none;
+  color: inherit;
+  font-size: 1.2rem;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+.toast-close:hover {
+  opacity: 1;
+}
+
+@keyframes slideIn {
+  from { transform: translateX(120%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+.toast-container {
+        position: fixed;
+        top: 100px;
+        right: 20px;
+        z-index: 9999;
+      }
+      
+      .toast-card {
+        background: rgba(255, 170, 0, 0.15);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 170, 0, 0.3);
+        color: #ffaa00;
+        padding: 16px 20px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-width: 320px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        animation: slideIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+      }
+      
+      .toast-content {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      
+      .toast-content p {
+        margin: 0;
+        font-family: 'Inter', sans-serif;
+        font-size: 0.9rem;
+        font-weight: 600;
+      }
+      
+      .toast-close {
+        background: transparent;
+        border: none;
+        color: inherit;
+        font-size: 1.3rem;
+        cursor: pointer;
+        opacity: 0.6;
+      }
+      
+      .toast-close:hover {
+        opacity: 1;
+      }
+      
+      @keyframes slideIn {
+        from { transform: translateX(120%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+      }
+      

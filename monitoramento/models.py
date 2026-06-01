@@ -4,24 +4,29 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils import timezone
 from django.conf import settings
 
-
+# =========================================================
+# ANÁLISE RÁPIDA (USADA NO FORMULÁRIO DIRETO)
+# =========================================================
 class Analise(models.Model):
-
-    cultura = models.CharField(
-        max_length=100
-    )
-
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='analises_solos', null=True, blank=True)
+    cultura = models.CharField(max_length=100)
     umidade = models.FloatField()
-
     ph = models.FloatField()
-
     temperatura = models.FloatField()
-
     recomendacao = models.TextField()
 
     def __str__(self):
-
         return self.cultura
+
+    # ADICIONADO: Método para ajudar os gráficos do Dashboard a colorirem alertas
+    @property
+    def status_critico(self):
+        """ Retorna se a análise apresenta índices perigosos para os gráficos """
+        if self.ph < 5.5 or self.ph > 7.5 or self.umidade < 30 or self.temperatura > 35:
+            return True
+        return False
+
+
 # =========================================================
 # USUÁRIO DO SISTEMA
 # =========================================================
@@ -59,14 +64,12 @@ class Propriedade(models.Model):
         on_delete=models.CASCADE,
         related_name='propriedades'
     )
-
     nome = models.CharField(max_length=150)
     localizacao = models.CharField(max_length=255)
     tamanho_hectares = models.DecimalField(
         max_digits=10,
         decimal_places=2
     )
-
     data_cadastro = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -93,13 +96,11 @@ class CulturaMonitorada(models.Model):
         on_delete=models.CASCADE,
         related_name='monitoramentos'
     )
-
     propriedade = models.ForeignKey(
         Propriedade,
         on_delete=models.CASCADE,
         related_name='culturas_monitoradas'
     )
-
     data_inicio = models.DateField()
     ativa = models.BooleanField(default=True)
 
@@ -116,18 +117,15 @@ class UmidadeSolo(models.Model):
         ('MEDIA', 'Média'),
         ('ALTA', 'Alta'),
     ]
-
     valor = models.DecimalField(
         max_digits=5,
         decimal_places=2,
         validators=[MinValueValidator(0)]
     )
-
     classificacao = models.CharField(
         max_length=10,
         choices=CLASSIFICACOES
     )
-
     data_registro = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -143,17 +141,14 @@ class TemperaturaSolo(models.Model):
         ('IDEAL', 'Ideal'),
         ('QUENTE', 'Quente'),
     ]
-
     valor = models.DecimalField(
         max_digits=5,
         decimal_places=2
     )
-
     classificacao = models.CharField(
         max_length=10,
         choices=CLASSIFICACOES
     )
-
     data_registro = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -169,7 +164,6 @@ class PhSolo(models.Model):
         ('NEUTRO', 'Neutro'),
         ('ALCALINO', 'Alcalino'),
     ]
-
     valor = models.DecimalField(
         max_digits=4,
         decimal_places=2,
@@ -178,12 +172,10 @@ class PhSolo(models.Model):
             MaxValueValidator(14)
         ]
     )
-
     classificacao = models.CharField(
         max_length=15,
         choices=CLASSIFICACOES
     )
-
     data_registro = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -200,15 +192,12 @@ class Recomendacao(models.Model):
         ('ALTA', 'Alta'),
         ('URGENTE', 'Urgente'),
     ]
-
     titulo = models.CharField(max_length=150)
     descricao = models.TextField()
-
     prioridade = models.CharField(
         max_length=10,
         choices=PRIORIDADES
     )
-
     data_criacao = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -216,7 +205,7 @@ class Recomendacao(models.Model):
 
 
 # =========================================================
-# ANÁLISE DO SOLO
+# ANÁLISE DO SOLO (COMPLETA / RELACIONAL)
 # =========================================================
 class AnaliseSolo(models.Model):
     cultura = models.ForeignKey(
@@ -224,47 +213,53 @@ class AnaliseSolo(models.Model):
         on_delete=models.CASCADE,
         related_name='analises'
     )
-
     propriedade = models.ForeignKey(
         Propriedade,
         on_delete=models.CASCADE,
         related_name='analises'
     )
-
     umidade = models.ForeignKey(
         UmidadeSolo,
         on_delete=models.SET_NULL,
         null=True,
         blank=True
     )
-
     ph = models.ForeignKey(
         PhSolo,
         on_delete=models.SET_NULL,
         null=True,
         blank=True
     )
-
     temperatura = models.ForeignKey(
         TemperaturaSolo,
         on_delete=models.SET_NULL,
         null=True,
         blank=True
     )
-
     recomendacao = models.ForeignKey(
         Recomendacao,
         on_delete=models.SET_NULL,
         null=True,
         blank=True
     )
-
     observacoes = models.TextField(blank=True, null=True)
-
     data_analise = models.DateTimeField(default=timezone.now)
 
     def __str__(self):
         return f"Análise - {self.cultura.nome}"
+
+    # ADICIONADO: Atalhos para a View de Relatórios e Gráficos acessar os valores sem quebrar
+    @property
+    def umidade_valor(self):
+        return self.umidade.valor if self.umidade else 0
+
+    @property
+    def ph_valor(self):
+        return self.ph.valor if self.ph else 0
+
+    @property
+    def temperatura_valor(self):
+        return self.temperatura.valor if self.temperatura else 0
 
 
 # =========================================================
@@ -276,17 +271,13 @@ class Irrigacao(models.Model):
         on_delete=models.CASCADE,
         related_name='irrigacoes'
     )
-
     quantidade_agua = models.DecimalField(
         max_digits=10,
         decimal_places=2,
         help_text='Quantidade em litros'
     )
-
     horario = models.DateTimeField()
-
     observacao = models.TextField(blank=True, null=True)
-
     automatica = models.BooleanField(default=False)
 
     def __str__(self):
@@ -302,9 +293,7 @@ class Historico(models.Model):
         on_delete=models.CASCADE,
         related_name='historicos'
     )
-
     descricao = models.TextField()
-
     data = models.DateTimeField(default=timezone.now)
 
     def __str__(self):
@@ -320,9 +309,7 @@ class RegistroAgricola(models.Model):
         on_delete=models.CASCADE,
         related_name='registros'
     )
-
     descricao = models.TextField()
-
     data_registro = models.DateTimeField(default=timezone.now)
 
     def __str__(self):
@@ -330,41 +317,17 @@ class RegistroAgricola(models.Model):
 
 
 # =========================================================
-# NOTIFICAÇÕES
-# =========================================================
-class Notificacao(models.Model):
-    usuario = models.ForeignKey(
-        Usuario,
-        on_delete=models.CASCADE,
-        related_name='notificacoes'
-    )
-
-    mensagem = models.TextField()
-
-    data_envio = models.DateTimeField(auto_now_add=True)
-
-    lida = models.BooleanField(default=False)
-
-    def __str__(self):
-        return f"Notificação para {self.usuario.nome_completo}"
-
-
-# =========================================================
 # RELATÓRIOS
 # =========================================================
 class Relatorio(models.Model):
     titulo = models.CharField(max_length=150)
-
     descricao = models.TextField()
-
     propriedade = models.ForeignKey(
         Propriedade,
         on_delete=models.CASCADE,
         related_name='relatorios'
     )
-
     data_geracao = models.DateTimeField(auto_now_add=True)
-
     arquivo_pdf = models.FileField(
         upload_to='relatorios/',
         blank=True,
@@ -374,13 +337,16 @@ class Relatorio(models.Model):
     def __str__(self):
         return self.titulo
 
+
+# =========================================================
+# NOTIFICAÇÕES (Mergulhado em uma única classe sem duplicidade)
+# =========================================================
 class Notificacao(models.Model):
     usuario = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
+        settings.AUTH_USER_MODEL,  # Usa o seu Usuario customizado de forma segura
         on_delete=models.CASCADE,
         related_name='notificacoes'
     )
-
     mensagem = models.TextField()
     data_envio = models.DateTimeField(auto_now_add=True)
     lida = models.BooleanField(default=False)

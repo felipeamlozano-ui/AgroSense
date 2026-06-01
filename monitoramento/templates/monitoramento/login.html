@@ -24,13 +24,87 @@
     />
 
     <link rel="stylesheet" href="{% static 'css/base.css' %}" />
+    <style>
+      .toast-container {
+        position: fixed;
+        top: 100px;
+        right: 20px;
+        z-index: 9999;
+      }
 
+      .toast-card {
+        background: rgba(255, 170, 0, 0.15);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 170, 0, 0.3);
+        color: #ffaa00;
+        padding: 16px 20px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-width: 320px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        animation: slideIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+      }
+
+      .toast-content {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .toast-content p {
+        margin: 0;
+        font-family: "Inter", sans-serif;
+        font-size: 0.9rem;
+        font-weight: 600;
+      }
+
+      .toast-close {
+        background: transparent;
+        border: none;
+        color: inherit;
+        font-size: 1.3rem;
+        cursor: pointer;
+        opacity: 0.6;
+      }
+
+      .toast-close:hover {
+        opacity: 1;
+      }
+
+      @keyframes slideIn {
+        from {
+          transform: translateX(120%);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+    </style>
     {% block extra_css %}{% endblock %}
   </head>
 
   <body>
     <!-- PRELOADER -->
-
+    {% if messages %}
+    <div class="toast-container">
+      {% for message in messages %}
+      <div class="toast-card">
+        <div class="toast-content">
+          <span class="toast-icon">⚠️</span>
+          <p>{{ message }}</p>
+        </div>
+        <button class="toast-close" onclick="this.parentElement.remove()">
+          &times;
+        </button>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
     <div id="preloader">
       <div class="loader-wrapper">
         <div class="loader-ring"></div>
@@ -156,7 +230,25 @@
               </div>
 
               <button type="submit" class="login-btn">Entrar</button>
-              <button type="submit" class="login-btn">Cadastrar</button>
+
+              <div style="text-align: center; margin-top: 15px">
+                <p class="login-subtitle" style="margin-bottom: 8px">
+                  Não tem uma conta?
+                </p>
+                <a
+                  href="{% url 'cadastro' %}"
+                  class="login-btn"
+                  style="
+                    display: block;
+                    text-align: center;
+                    text-decoration: none;
+                    background: transparent;
+                    border: 1px solid #ffffff33;
+                  "
+                >
+                  Cadastrar-se
+                </a>
+              </div>
             </form>
           </div>
         </section>

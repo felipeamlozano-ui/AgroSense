@@ -1,549 +1,531 @@
-{% extends 'base.html' %}
-{% load static %}
-
-{% block title %}
-Nova análise | Neural Soil AI
-{% endblock %}
+{% extends 'base.html' %} 
+{% load static %} 
+{% block title %}AgroSense - Monitoramento de Solo{% endblock %} 
+{% block hero_features %}{% endblock %} 
 
 {% block content %}
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-<section class="analysis-page">
+  <title>AgroSense - Sistema Inteligente de Solo</title>
 
-    <!-- BACKGROUND FX -->
+  <meta name="theme-color" content="#050816" />
+  <meta
+    name="description"
+    content="Sistema inteligente de monitoramento e análise do solo para agricultura e ensino técnico"
+  />
 
-    <div class="analysis-blur blur-1"></div>
-    <div class="analysis-blur blur-2"></div>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+    rel="stylesheet"
+  />
+
+  <link rel="stylesheet" href="{% static 'css/base.css' %}" />
+</head>
+
+<body>
+    {% if messages %}
+    <div class="toast-container">
+      {% for message in messages %}
+      <div class="toast-card">
+        <div class="toast-content">
+          <span class="toast-icon">⚠️</span>
+          <p>{{ message }}</p>
+        </div>
+        <button class="toast-close" onclick="this.parentElement.remove()">
+          &times;
+        </button>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  <div id="preloader">
+    <div class="loader-wrapper">
+      <div class="loader-ring"></div>
+      <div class="loader-ring delay"></div>
+      <div class="loader-core"></div>
+
+      <h1 class="loader-text">AGROSENSE</h1>
+    </div>
+  </div>
+
+  <div id="webgl-container"></div>
+
+  <div class="noise-overlay"></div>
+
+  <div class="gradient-orb orb-1"></div>
+  <div class="gradient-orb orb-2"></div>
+  <div class="gradient-orb orb-3"></div>
+
+  <canvas id="particle-canvas"></canvas>
+
+  <header class="navbar glass">
+
+
+    <div class="mobile-menu" id="mobileMenu">
+      <a href="#hero">Sistema</a>
+      <a href="{% url 'monitoramento' %}">Monitoramento</a>
+      <a href="#hero1">Análises</a>
+      <a href="{% url 'login' %}">Login</a>
+      <a href="#rodape2">Contato</a>
+    </div>
+  </header>
+  <section class="analysis-page">
     <div class="analysis-container">
+      <div class="analysis-info reveal">
+        <span class="analysis-badge">Módulo IA AgroSense</span>
+        <h1 class="analysis-title">Análise de Solo <span>Imersiva</span></h1>
+        <p class="analysis-description">
+          Insira os dados coletados pelos sensores para gerar diagnósticos em
+          tempo real utilizando nossa malha neural preditiva.
+        </p>
 
-        <!-- LEFT CONTENT -->
-
-        <div class="analysis-info reveal">
-
-            <div class="analysis-badge">
-                SOIL INTELLIGENCE SYSTEM
-            </div>
-
-            <h1 class="analysis-title">
-                Nova análise
-                <span>do solo</span>
-            </h1>
-
-            <p class="analysis-description">
-                Plataforma avançada de análise agrícola com inteligência artificial,
-                processamento em tempo real e visualização futurista de dados ambientais.
-            </p>
-
-            <!-- FLOATING METRICS -->
-
-            <div class="analysis-metrics">
-
-                <div class="metric-card tilt-card">
-                    <span>Precisão IA</span>
-                    <strong>99.2%</strong>
-                </div>
-
-                <div class="metric-card tilt-card">
-                    <span>Processamento</span>
-                    <strong>0.4s</strong>
-                </div>
-
-            </div>
-
+        <div class="analysis-metrics">
+          <div class="metric-card tilt-card">
+            <span>Total de Análises</span>
+            <strong>{{ analises.count }}</strong>
+          </div>
+          <div class="metric-card tilt-card">
+            <span>Última Cultura</span>
+            <strong>{{ ultima_analise.cultura|default:"Nenhuma" }}</strong>
+          </div>
         </div>
+      </div>
 
-        <!-- FORM -->
-
-        <div class="analysis-form-wrapper reveal tilt-card">
-
-            <div class="form-glow"></div>
-
-            <div class="form-header">
-
-                <div class="form-icon">
-                    <div class="pulse-ring"></div>
-                </div>
-
-                <div>
-                    <h2>Nova Coleta</h2>
-                    <p>Insira os dados da análise</p>
-                </div>
-
+      <div class="analysis-form-wrapper tilt-card reveal">
+        <form method="POST" action="">
+          {% csrf_token %}
+          <div class="form-grid">
+            <div>
+              <label>Cultura Agrícola</label>
+              <input
+                type="text"
+                name="cultura"
+                placeholder="Ex: Soja, Milho"
+                required
+              />
             </div>
-
-            <form method="POST" class="analysis-form">
-
-                {% csrf_token %}
-
-                <div class="form-grid">
-                    {{ form.as_p }}
-                </div>
-
-                <div class="form-actions">
-
-                    <button type="submit" class="holo-btn large submit-btn">
-                        <span>Salvar análise</span>
-                    </button>
-
-                    <a href="/" class="glass-link">
-                        Voltar
-                    </a>
-
-                </div>
-
-            </form>
-
-        </div>
-
+            <div>
+              <label>Umidade do Solo (%)</label>
+              <input
+                type="number"
+                step="0.1"
+                name="umidade"
+                placeholder="Ex: 45.8"
+                required
+              />
+            </div>
+            <div>
+              <label>pH do Solo</label>
+              <input
+                type="number"
+                step="0.1"
+                name="ph"
+                placeholder="Ex: 6.2"
+                required
+              />
+            </div>
+            <div>
+              <label>Temperatura (°C)</label>
+              <input
+                type="number"
+                step="0.1"
+                name="temperatura"
+                placeholder="Ex: 26.5"
+                required
+              />
+            </div>
+          </div>
+          <button type="submit" class="holo-btn submit-btn">
+            <span>Gerar Recomendação IA</span>
+          </button>
+        </form>
+      </div>
     </div>
 
-</section>
-
-{% endblock %}
-
-{% block extra_css %}
-
-<style>
-
-/* =========================================================
-   ANALYSIS PAGE
-========================================================= */
-
-.analysis-page{
-    position:relative;
-    min-height:100vh;
-    padding:180px 8% 120px;
-    overflow:hidden;
-}
-
-/* =========================================================
-   BACKGROUND BLURS
-========================================================= */
-
-.analysis-blur{
-    position:absolute;
-    border-radius:50%;
-    filter:blur(140px);
-    opacity:.25;
-    z-index:-1;
-}
-
-.blur-1{
-    width:500px;
-    height:500px;
-    background:#00f0ff;
-    top:0;
-    left:-150px;
-}
-
-.blur-2{
-    width:600px;
-    height:600px;
-    background:#7c3aed;
-    bottom:-250px;
-    right:-150px;
-}
-
-/* =========================================================
-   LAYOUT
-========================================================= */
-
-.analysis-container{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:80px;
-    align-items:center;
-}
-
-/* =========================================================
-   LEFT SIDE
-========================================================= */
-
-.analysis-badge{
-    display:inline-flex;
-    align-items:center;
-
-    padding:12px 18px;
-
-    border-radius:999px;
-
-    background:rgba(255,255,255,.05);
-
-    border:1px solid rgba(255,255,255,.08);
-
-    letter-spacing:2px;
-    font-size:.75rem;
-    margin-bottom:30px;
-
-    backdrop-filter:blur(20px);
-}
-
-.analysis-title{
-    font-size:clamp(3rem, 7vw, 5.5rem);
-    line-height:1;
-    font-weight:900;
-}
-
-.analysis-title span{
-    background:
-        linear-gradient(
-            to right,
-            #00f0ff,
-            #8b5cf6,
-            #00ffbf
-        );
-
-    -webkit-background-clip:text;
-    color:transparent;
-}
-
-.analysis-description{
-    margin-top:35px;
-
-    color:var(--muted);
-
-    font-size:1.1rem;
-    line-height:1.9;
-
-    max-width:600px;
-}
-
-/* =========================================================
-   METRICS
-========================================================= */
-
-.analysis-metrics{
-    display:flex;
-    gap:24px;
-    margin-top:50px;
-}
-
-.metric-card{
-    position:relative;
-
-    width:180px;
-
-    padding:28px;
-
-    border-radius:24px;
-
-    background:rgba(255,255,255,.05);
-
-    border:1px solid rgba(255,255,255,.08);
-
-    backdrop-filter:blur(20px);
-
-    overflow:hidden;
-
-    transition:.5s;
-}
-
-.metric-card::before{
-    content:"";
-
-    position:absolute;
-    inset:0;
-
-    background:
-        linear-gradient(
-            135deg,
-            rgba(255,255,255,.12),
-            transparent
-        );
-}
-
-.metric-card span{
-    display:block;
-    color:var(--muted);
-    margin-bottom:12px;
-}
-
-.metric-card strong{
-    font-size:2rem;
-    color:white;
-}
-
-/* =========================================================
-   FORM WRAPPER
-========================================================= */
-
-.analysis-form-wrapper{
-    position:relative;
-
-    padding:50px;
-
-    border-radius:36px;
-
-    overflow:hidden;
-
-    background:
-        linear-gradient(
-            135deg,
-            rgba(255,255,255,.08),
-            rgba(255,255,255,.03)
-        );
-
-    border:1px solid rgba(255,255,255,.1);
-
-    backdrop-filter:blur(30px);
-
-    box-shadow:
-        0 20px 80px rgba(0,0,0,.4),
-        0 0 80px rgba(0,255,255,.08);
-}
-
-.form-glow{
-    position:absolute;
-    inset:0;
-
-    background:
-        radial-gradient(
-            circle at top left,
-            rgba(0,255,255,.12),
-            transparent 40%
-        );
-}
-
-/* =========================================================
-   FORM HEADER
-========================================================= */
-
-.form-header{
-    display:flex;
-    align-items:center;
-    gap:20px;
-
-    margin-bottom:40px;
-}
-
-.form-header h2{
-    font-size:2rem;
-}
-
-.form-header p{
-    color:var(--muted);
-}
-
-.form-icon{
-    width:70px;
-    height:70px;
-
-    position:relative;
-
-    border-radius:24px;
-
-    background:
-        linear-gradient(
-            135deg,
-            #00f0ff,
-            #8b5cf6
-        );
-
-    display:flex;
-    align-items:center;
-    justify-content:center;
-
-    box-shadow:
-        0 0 50px rgba(0,255,255,.4);
-}
-
-.pulse-ring{
-    width:18px;
-    height:18px;
-
-    border-radius:50%;
-    background:white;
-
-    animation:pulse 2s infinite;
-}
-
-@keyframes pulse{
-
-    0%{
-        box-shadow:
-            0 0 0 0 rgba(255,255,255,.6);
+    {% if ultima_analise %}
+    <div class="resultado-section reveal">
+      <h2 class="section-title">Último Relatório Gerado</h2>
+
+      <div class="dados-grid">
+        <div class="resultado-card tilt-card">
+          <h4>Cultura</h4>
+          <strong>{{ ultima_analise.cultura }}</strong>
+        </div>
+        <div class="resultado-card tilt-card">
+          <h4>Umidade</h4>
+          <strong>{{ ultima_analise.umidade }}%</strong>
+        </div>
+        <div class="resultado-card tilt-card">
+          <h4>pH do Solo</h4>
+          <strong>{{ ultima_analise.ph }}</strong>
+        </div>
+        <div class="resultado-card tilt-card">
+          <h4>Temperatura</h4>
+          <strong>{{ ultima_analise.temperatura }}°C</strong>
+        </div>
+      </div>
+
+      <div class="grafico-container tilt-card">
+        <h3 class="grafico-titulo">Análise Gráfica dos Indicadores</h3>
+
+        <div class="linha-grafico">
+          <div class="label-info">
+            <span>Umidade do Solo</span
+            ><strong>{{ ultima_analise.umidade }}%</strong>
+          </div>
+          <div class="barra-fundo">
+            <div
+              class="barra-progresso bg-umidade"
+              style="width: {{ ultima_analise.umidade }}%;"
+            ></div>
+          </div>
+        </div>
+        <div class="linha-grafico">
+          <div class="label-info">
+            <span>Potencial Hidrogeniônico (pH)</span
+            ><strong>{{ ultima_analise.ph }} pH</strong>
+          </div>
+          <div class="barra-fundo">
+            <div
+              class="barra-progresso bg-ph"
+              style="width: {{ ph_porcentagem }}%;"
+            ></div>
+          </div>
+        </div>
+        <div class="linha-grafico">
+          <div class="label-info">
+            <span>Temperatura Corporal do Solo</span
+            ><strong>{{ ultima_analise.temperatura }}°C</strong>
+          </div>
+          <div class="barra-fundo">
+            <div
+              class="barra-progresso bg-temp"
+              style="width: {{ temp_porcentagem }}%;"
+            ></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="recomendacao-box">
+        <h3>Recomendação da Inteligência Artificial</h3>
+        <p>{{ ultima_analise.recomendacao }}</p>
+      </div>
+    </div>
+
+    <div class="historico-section reveal">
+      <h2 class="section-title">Histórico de Monitoramentos</h2>
+      <div class="historico-table">
+        <table>
+          <thead>
+            <tr>
+              <th>Cultura</th>
+              <th>Umidade</th>
+              <th>pH</th>
+              <th>Temperatura</th>
+              <th>Recomendação</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for a in analises %}
+            <tr>
+              <td><strong>{{ a.cultura }}</strong></td>
+              <td>{{ a.umidade }}%</td>
+              <td>{{ a.ph }}</td>
+              <td>{{ a.temperatura }}°C</td>
+              <td><small>{{ a.recomendacao }}</small></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% else %}
+    <div class="empty-card reveal">
+      <h3>Nenhuma análise encontrada</h3>
+      <p>
+        Preencha os dados acima para gerar seu primeiro relatório inteligente do
+        solo.
+      </p>
+    </div>
+    {% endif %}
+  </section>
+  {% endblock content %} {% block extra_css %}
+  <style>
+    .analysis-page {
+      padding: 150px 8% 100px;
+      position: relative;
+      z-index: 10;
     }
-
-    70%{
-        box-shadow:
-            0 0 0 18px rgba(255,255,255,0);
+    .analysis-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px;
+      align-items: center;
     }
-
-    100%{
-        box-shadow:
-            0 0 0 0 rgba(255,255,255,0);
+    .analysis-badge {
+      display: inline-block;
+      padding: 8px 16px;
+      border-radius: 999px;
+      background: rgba(0, 240, 255, 0.1);
+      border: 1px solid rgba(0, 240, 255, 0.2);
+      margin-bottom: 25px;
+      color: #00f0ff;
+      font-size: 0.85rem;
+      letter-spacing: 1px;
     }
-
-}
-
-/* =========================================================
-   FORM
-========================================================= */
-
-.analysis-form{
-    position:relative;
-    z-index:2;
-}
-
-.analysis-form p{
-    margin-bottom:28px;
-}
-
-.analysis-form label{
-    display:block;
-
-    margin-bottom:12px;
-
-    color:white;
-    font-weight:600;
-
-    letter-spacing:.5px;
-}
-
-.analysis-form input,
-.analysis-form textarea,
-.analysis-form select{
-
-    width:100%;
-
-    padding:18px 20px;
-
-    border-radius:18px;
-
-    border:1px solid rgba(255,255,255,.08);
-
-    background:
-        rgba(255,255,255,.04);
-
-    color:white;
-
-    outline:none;
-
-    font-size:1rem;
-
-    backdrop-filter:blur(20px);
-
-    transition:.4s;
-}
-
-.analysis-form textarea{
-    min-height:140px;
-    resize:vertical;
-}
-
-.analysis-form input:focus,
-.analysis-form textarea:focus,
-.analysis-form select:focus{
-
-    border-color:rgba(0,255,255,.5);
-
-    box-shadow:
-        0 0 0 4px rgba(0,255,255,.08),
-        0 0 40px rgba(0,255,255,.15);
-
-    transform:translateY(-2px);
-}
-
-.analysis-form input::placeholder,
-.analysis-form textarea::placeholder{
-    color:rgba(255,255,255,.35);
-}
-
-/* =========================================================
-   BUTTONS
-========================================================= */
-
-.form-actions{
-    display:flex;
-    align-items:center;
-    gap:20px;
-
-    margin-top:40px;
-}
-
-.submit-btn{
-    min-width:240px;
-}
-
-.glass-link{
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-
-    padding:18px 26px;
-
-    border-radius:18px;
-
-    text-decoration:none;
-
-    color:white;
-
-    background:rgba(255,255,255,.05);
-
-    border:1px solid rgba(255,255,255,.08);
-
-    backdrop-filter:blur(20px);
-
-    transition:.4s;
-}
-
-.glass-link:hover{
-    transform:translateY(-4px);
-
-    background:rgba(255,255,255,.08);
-}
-
-/* =========================================================
-   DJANGO ERRORS
-========================================================= */
-
-.errorlist{
-    list-style:none;
-
-    margin-top:10px;
-
-    color:#ff7b7b;
-
-    font-size:.9rem;
-}
-
-/* =========================================================
-   RESPONSIVE
-========================================================= */
-
-@media(max-width:1100px){
-
-    .analysis-container{
-        grid-template-columns:1fr;
+    .analysis-title {
+      font-size: 3.5rem;
+      font-weight: 900;
+      line-height: 1.2;
     }
-
-}
-
-@media(max-width:768px){
-
-    .analysis-page{
-        padding-top:140px;
+    .analysis-title span {
+      background: linear-gradient(to right, #00f0ff, #8b5cf6, #00ffbf);
+      -webkit-background-clip: text;
+      color: transparent;
     }
-
-    .analysis-form-wrapper{
-        padding:30px;
+    .analysis-description {
+      margin-top: 25px;
+      color: #8f9cae;
+      line-height: 1.8;
+      font-size: 1.1rem;
     }
-
-    .analysis-title{
-        font-size:3.5rem;
+    .analysis-metrics {
+      display: flex;
+      gap: 20px;
+      margin-top: 40px;
     }
-
-    .analysis-metrics{
-        flex-direction:column;
+    .metric-card {
+      flex: 1;
+      padding: 25px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
     }
-
-    .form-actions{
-        flex-direction:column;
-        align-items:stretch;
+    .metric-card span {
+      display: block;
+      font-size: 0.9rem;
+      color: #8f9cae;
+      margin-bottom: 5px;
     }
-
-}
-
-</style>
-
-{% endblock %}
+    .metric-card strong {
+      font-size: 2rem;
+      color: white;
+    }
+    .analysis-form-wrapper {
+      padding: 40px;
+      border-radius: 30px;
+      background: rgba(255, 255, 255, 0.02);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    .form-grid label {
+      display: block;
+      margin-bottom: 10px;
+      color: #fff;
+      font-size: 0.9rem;
+    }
+    .form-grid input {
+      width: 100%;
+      padding: 16px;
+      border-radius: 15px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.04);
+      color: white;
+      transition: all 0.3s ease;
+    }
+    .form-grid input:focus {
+      outline: none;
+      border-color: #00f0ff;
+      box-shadow: 0 0 15px rgba(0, 240, 255, 0.2);
+    }
+    .submit-btn {
+      margin-top: 30px;
+      width: 100%;
+      height: 55px;
+    }
+    .resultado-section,
+    .historico-section {
+      margin-top: 80px;
+    }
+    .section-title {
+      margin-bottom: 30px;
+      font-size: 2rem;
+      font-weight: 800;
+    }
+    .dados-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+    }
+    .resultado-card {
+      padding: 25px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      text-align: center;
+    }
+    .resultado-card h4 {
+      font-size: 0.9rem;
+      color: #8f9cae;
+      margin-bottom: 10px;
+    }
+    .resultado-card strong {
+      font-size: 1.8rem;
+      color: #00ffbf;
+    }
+    .grafico-container {
+      margin-top: 40px;
+      padding: 35px;
+      border-radius: 25px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .grafico-titulo {
+      margin-bottom: 30px;
+      font-size: 1.3rem;
+    }
+    .linha-grafico {
+      margin-bottom: 25px;
+    }
+    .label-info {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .barra-fundo {
+      height: 14px;
+      background: #111424;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .barra-progresso {
+      height: 100%;
+      border-radius: 999px;
+      transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .bg-umidade {
+      background: linear-gradient(90deg, #00f0ff, #6ee7ff);
+    }
+    .bg-ph {
+      background: linear-gradient(90deg, #00ffbf, #3cff8f);
+    }
+    .bg-temp {
+      background: linear-gradient(90deg, #ff9f43, #ff6b35);
+    }
+    .recomendacao-box {
+      margin-top: 40px;
+      padding: 35px;
+      border-radius: 25px;
+      background: linear-gradient(
+        135deg,
+        rgba(0, 255, 191, 0.1),
+        rgba(0, 240, 255, 0.05)
+      );
+      border: 1px solid rgba(0, 255, 191, 0.2);
+    }
+    .recomendacao-box h3 {
+      margin-bottom: 15px;
+      color: #00ffbf;
+    }
+    .empty-card {
+      text-align: center;
+      padding: 60px;
+      border-radius: 25px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      margin-top: 60px;
+    }
+    .historico-table {
+      padding: 20px;
+      border-radius: 25px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      overflow-x: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th,
+    td {
+      padding: 16px;
+      text-align: left;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    th {
+      color: #00ffbf;
+    }
+    @media (max-width: 1000px) {
+      .analysis-container {
+        grid-template-columns: 1fr;
+      }
+      .dados-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+    .toast-container {
+        position: fixed;
+        top: 100px;
+        right: 20px;
+        z-index: 9999;
+      }
+      
+      .toast-card {
+        background: rgba(255, 170, 0, 0.15);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 170, 0, 0.3);
+        color: #ffaa00;
+        padding: 16px 20px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-width: 320px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        animation: slideIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+      }
+      
+      .toast-content {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      
+      .toast-content p {
+        margin: 0;
+        font-family: 'Inter', sans-serif;
+        font-size: 0.9rem;
+        font-weight: 600;
+      }
+      
+      .toast-close {
+        background: transparent;
+        border: none;
+        color: inherit;
+        font-size: 1.3rem;
+        cursor: pointer;
+        opacity: 0.6;
+      }
+      
+      .toast-close:hover {
+        opacity: 1;
+      }
+      
+      @keyframes slideIn {
+        from { transform: translateX(120%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+      }
+  </style>
+  {% endblock %}
+</body>

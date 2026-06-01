@@ -1,0 +1,148 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>
+        {% block title %}AgroSense{% endblock %}
+    </title>
+
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+
+    {% block extra_css %}{% endblock %}
+
+</head>
+
+<body>
+
+    <!-- BACKGROUND -->
+
+    <div id="webgl-container"></div>
+
+    <div class="noise-overlay"></div>
+
+    <div class="gradient-orb orb-1"></div>
+    <div class="gradient-orb orb-2"></div>
+    <div class="gradient-orb orb-3"></div>
+
+    <canvas id="particle-canvas"></canvas>
+
+    <!-- NAVBAR -->
+
+    <header class="navbar glass">
+
+        <div class="nav-container">
+
+            <a href="/" class="logo">
+                <span class="logo-dot"></span>
+                AGROSENSE
+            </a>
+
+            <nav class="desktop-nav">
+
+                <a href="{% url 'monitoramento' %}">
+                    Monitoramento
+                </a>
+
+                <a href="#">
+                    Relatórios
+                </a>
+
+                <a href="#">
+                    Histórico
+                </a>
+
+            </nav>
+
+            <div class="nav-actions">
+
+                <div class="auth-status">
+
+                    {% if user.is_authenticated %}
+
+                    <span class="status-dot online"></span>
+                    <span class="status-text">
+                        {{ user.email }}
+                    </span>
+
+                    {% else %}
+
+                    <span class="status-dot offline"></span>
+                    <span class="status-text">
+                        Deslogado
+                    </span>
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </header>
+
+    <main>
+
+        {% block content %}
+        {% endblock %}
+
+    </main>
+
+    <footer class="footer">
+
+        <div class="footer-grid">
+
+            <div>
+
+                <h3>AGROSENSE</h3>
+
+                <p>
+                    Sistema inteligente para monitoramento
+                    agrícola e análise do solo.
+                </p>
+
+            </div>
+
+            <div>
+
+                <h4>Sistema</h4>
+
+                <a href="{% url 'monitoramento' %}">
+                    Monitoramento
+                </a>
+
+            </div>
+
+            <div>
+
+                <h4>Contato</h4>
+
+                <p class="texto_rodape1">
+                    felipe.a.m.lozano@gmail.com
+                </p>
+
+            </div>
+
+        </div>
+
+        <div class="footer-bottom">
+            © 2026 AgroSense
+        </div>
+
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+
+    <script src="{% static 'js/base.js' %}"></script>
+
+    {% block extra_js %}
+    {% endblock %}
+
+</body>
+</html>

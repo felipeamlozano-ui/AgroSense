@@ -12,8 +12,8 @@ urlpatterns = [
 
     path(
         'cadastrar/',
-        views.cadastrar,
-        name='cadastrar'
+        views.cadastro,
+        name='cadastro'
     ),
 
     path(
