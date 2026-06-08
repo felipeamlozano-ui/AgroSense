@@ -28,4 +28,21 @@ urlpatterns = [
         name='login'
     ),
 
+    path(
+        'notificacao/<int:notificacao_id>/',
+        views.detalhe_notificacao,
+        name='detalhe_notificacao'
+    ),
+
+    path(
+        'notificacoes/lidas/',
+        views.marcar_todas_lidas,
+        name='marcar_todas_lidas'
+    ),
+    path(
+        'gestao/',
+        views.gestao_agricola,
+        name='gestao_agricola'
+    ),
+
 ]

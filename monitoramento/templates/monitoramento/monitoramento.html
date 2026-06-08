@@ -212,8 +212,12 @@
       </div>
 
       <div class="recomendacao-box">
-        <h3>Recomendação da Inteligência Artificial</h3>
-        <p>{{ ultima_analise.recomendacao }}</p>
+        <div class="recomendacao-box">
+          <h3>Recomendação da Inteligência Artificial</h3>
+          <div class="recomendacao-texto">
+              {{ ultima_analise.recomendacao|linebreaks }}
+          </div>
+      </div>
       </div>
     </div>
 
@@ -525,6 +529,11 @@
       @keyframes slideIn {
         from { transform: translateX(120%); opacity: 0; }
         to { transform: translateX(0); opacity: 1; }
+      }
+      .recomendacao-texto {
+        white-space: normal;
+        line-height: 1.6;
+        color: #e5e7eb;
       }
   </style>
   {% endblock %}

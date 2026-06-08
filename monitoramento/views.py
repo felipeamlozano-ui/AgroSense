@@ -1,21 +1,24 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.views import LoginView
 from django.contrib.auth import login, get_user_model
 from django.contrib import messages
-from django.utils import timezone  # <-- ESSA LINHA RESOLVE O ERRO
-
+from django.utils import timezone
+from django.contrib.auth.decorators import login_required
+from .ia.base_embrapa import EMBRAPA_DADOS
+from .ia.gemini_service import gerar_relatorio_ia
 from .forms import CustomLoginForm, CustomUserCreationForm
 from .models import (
-    Analise, Cultura, Propriedade, UmidadeSolo, TemperaturaSolo, 
+    Analise, Cultura, Propriedade, UmidadeSolo, TemperaturaSolo,
     PhSolo, Recomendacao, AnaliseSolo,
-    Historico, Relatorio, Notificacao
+    Historico, Relatorio, Notificacao,
+    Produtor, Irrigacao, RegistroAgricola
 )
 
-# Definição do modelo customizado de Usuário do AgroSense
 Usuario = get_user_model()
 
+
 # =========================================================
-# AUTENTICAÇÃO (LOGIN / CADASTRO)
+# LOGIN / CADASTRO
 # =========================================================
 class UsuarioLoginView(LoginView):
     template_name = 'monitoramento/login.html'
@@ -52,205 +55,282 @@ class UsuarioLoginView(LoginView):
 
 
 def cadastro(request):
-    if request.method == 'POST':
-        form = CustomUserCreationForm(request.POST)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'Conta criada com sucesso! Faça seu login.')
-            return redirect('login')
-    else:
-        form = CustomUserCreationForm()
-    
-    return render(request, 'monitoramento/cadastro.html', {'form': form})
+    form = CustomUserCreationForm(request.POST or None)
+
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.success(request, "Conta criada com sucesso!")
+        return redirect("login")
+
+    return render(request, "monitoramento/cadastro.html", {"form": form})
 
 
 # =========================================================
-# HOME / INDEX
+# INDEX
 # =========================================================
 def index(request):
-    # Captura o parâmetro de erro de redirecionamento do monitoramento
-    if request.GET.get('erro') == 'login':
-        messages.warning(request, 'Você precisa estar logado para acessar a página de Monitoramento!')
-
-    try:
-        # Se estiver logado, mostra apenas as dele. Se não estiver, lista vazia.
-        if request.user.is_authenticated:
-            analises = Analise.objects.filter(usuario=request.user).order_by("-id")
-        else:
-            analises = []
-        erro = None
-    except Exception as e:
-        analises = []
-        erro = str(e)
-
-    return render(
-        request,
-        "monitoramento/index.html",
-        {"analises": analises, "erro": erro}
-    )
+    analises = Analise.objects.filter(usuario=request.user).order_by("-id") if request.user.is_authenticated else []
+    return render(request, "monitoramento/index.html", {"analises": analises})
 
 
+# =========================================================
+# CADASTRAR ANALISE
+# =========================================================
 def cadastrar(request):
-    # Bloqueio de segurança manual para a rota de cadastro rápido de análise
     if not request.user.is_authenticated:
-        return redirect('/?erro=login')
+        return redirect("/?erro=login")
 
     if request.method == "POST":
         try:
             Analise.objects.create(
-                usuario=request.user,  # Vincula ao usuário atual
+                usuario=request.user,
                 cultura=request.POST.get("cultura", "Milho"),
-                umidade=float(str(request.POST.get("umidade", 0)).replace(',', '.')),
-                ph=float(str(request.POST.get("ph", 0)).replace(',', '.')),
-                temperatura=float(str(request.POST.get("temperatura", 0)).replace(',', '.')),
+                umidade=float(str(request.POST.get("umidade", 0)).replace(",", ".")),
+                ph=float(str(request.POST.get("ph", 0)).replace(",", ".")),
+                temperatura=float(str(request.POST.get("temperatura", 0)).replace(",", ".")),
                 recomendacao="Análise gerada automaticamente"
             )
         except Exception as e:
-            print("🔥 ERRO AO SALVAR:", e)
+            print("Erro:", e)
+
         return redirect("index")
 
     return render(request, "monitoramento/cadastrar.html")
 
 
 # =========================================================
-# MONITORAMENTO AGROSENSE
+# MONITORAMENTO
 # =========================================================
-def monitoramento(request):
-    if not request.user.is_authenticated:
-        return redirect('/?erro=login')
+from .models import CulturaAgricola
 
-    # CORREÇÃO: Definindo a variável para requisições GET não quebrarem o contexto
-    erro = None 
-    notificacoes_nao_lidas = 0
-    
+def safe_float(value, default=0.0):
     try:
-        notificacoes_nao_lidas = request.user.notificacoes.filter(lida=False).count()
-    except AttributeError:
-        notificacoes_nao_lidas = 0
+        return float(str(value).replace(",", "."))
+    except:
+        return default
+
+
+@login_required
+def monitoramento(request):
+
+    if not request.user.is_authenticated:
+        return redirect("/?erro=login")
+
+    notificacoes = request.user.notificacoes.filter(lida=False).order_by("-data_envio")
+    notificacoes_nao_lidas = notificacoes.count()
+
+    erro = None
 
     if request.method == "POST":
-        cultura_nome = request.POST.get("cultura", "").strip()
-        umidade_raw = request.POST.get("umidade", "0")
-        ph_raw = request.POST.get("ph", "0")
-        temperatura_raw = request.POST.get("temperatura", "0")
 
-        if cultura_nome and umidade_raw and ph_raw and temperatura_raw:
-            try:
-                umidade = float(str(umidade_raw).replace(',', '.'))
-                ph = float(str(ph_raw).replace(',', '.'))
-                temperatura = float(str(temperatura_raw).replace(',', '.'))
+        cultura_nome = (request.POST.get("cultura") or "desconhecida").strip().capitalize()
 
-                if umidade < 30: class_umidade = 'BAIXA'
-                elif umidade > 80: class_umidade = 'ALTA'
-                else: class_umidade = 'MEDIA'
+        umidade = safe_float(request.POST.get("umidade"))
+        ph = safe_float(request.POST.get("ph"))
+        temperatura = safe_float(request.POST.get("temperatura"))
 
-                if ph < 5.5: class_ph = 'ACIDO'
-                elif ph > 7.5: class_ph = 'ALCALINO'
-                else: class_ph = 'NEUTRO'
+        # =========================
+        # 1. BUSCA CULTURA NO BANCO
+        # =========================
+        obj_cultura = CulturaAgricola.objects.filter(
+            nome__iexact=cultura_nome
+        ).first()
 
-                if temperatura < 18: class_temp = 'FRIA'
-                elif temperatura > 35: class_temp = 'QUENTE'
-                else: class_temp = 'IDEAL'
-
-                rec_textos = []
-                prioridade_rec = 'BAIXA'
-                if class_umidade == 'BAIXA': 
-                    rec_textos.append("Solo seco. Incremente os ciclos de irrigação.")
-                    prioridade_rec = 'MEDIA'
-                if class_ph == 'ACIDO': 
-                    rec_textos.append("Solo ácido. Recomendada a calagem para correção.")
-                    prioridade_rec = 'ALTA'
-                if class_temp == 'QUENTE': 
-                    rec_textos.append("Solo superaquecido. Monitore estresse térmico da planta.")
-                    prioridade_rec = 'URGENTE'
-                
-                recomendacao_final = " ".join(rec_textos) if rec_textos else "Solo estável e em ótimas condições operacionais."
-
-                obj_cultura, _ = Cultura.objects.get_or_create(
-                    nome=cultura_nome.capitalize(),
-                    defaults={'descricao': f'Cultura de {cultura_nome.capitalize()} cadastrada via painel de monitoramento.'}
-                )
-                
-                obj_propriedade = Propriedade.objects.first()
-                if not obj_propriedade:
-                    from .models import Produtor
-                    produtor_padrao, _ = Produtor.objects.get_or_create(
-                        cpf='000.000.000-00', 
-                        defaults={'nome': 'Produtor Padrão', 'telefone': '0000', 'email': 'padrao@agro.com'}
-                    )
-                    obj_propriedade = Propriedade.objects.create(
-                        produtor=produtor_padrao, nome='Propriedade Principal', localizacao='Geral', tamanho_hectares=10.0
-                    )
-
-                # TABELA 1: Analise
-                Analise.objects.create(
-                    usuario=request.user, cultura=cultura_nome.capitalize(),
-                    umidade=umidade, ph=ph, temperatura=temperatura, recomendacao=recomendacao_final
-                )
-
-                # TABELA 2: UmidadeSolo
-                reg_umidade = UmidadeSolo.objects.create(valor=umidade, classificacao=class_umidade)
-
-                # TABELA 3: TemperaturaSolo
-                reg_temp = TemperaturaSolo.objects.create(valor=temperatura, classificacao=class_temp)
-
-                # TABELA 4: PhSolo
-                reg_ph = PhSolo.objects.create(valor=ph, classificacao=class_ph)
-
-                # TABELA 5: Recomendacao
-                reg_rec = Recomendacao.objects.create(
-                    titulo=f"Recomendação para {cultura_nome.capitalize()}",
-                    descricao=recomendacao_final, prioridade=prioridade_rec
-                )
-
-                # TABELA 6: AnaliseSolo
-                AnaliseSolo.objects.create(
-                    cultura=obj_cultura, propriedade=obj_propriedade,
-                    umidade=reg_umidade, ph=reg_ph, temperatura=reg_temp, recomendacao=reg_rec
-                )
-
-                # TABELA 7: Histórico Agrícola
-                Historico.objects.create(
-                    propriedade=obj_propriedade,
-                    descricao=f"Leitura de parâmetros executada para a cultura {obj_cultura.nome}."
-                )
-
-                # TABELA 8: Relatório Automático
-                Relatorio.objects.create(
-                    titulo=f"Relatório Técnico - {cultura_nome.capitalize()} ({timezone.now().strftime('%d/%m/%Y')})",
-                    descricao=f"Análise estrutural processada. pH verificado: {ph} ({class_ph}). Umidade: {umidade}% ({class_umidade}).",
-                    propriedade=obj_propriedade
-                )
-
-                # TABELA 9: Notificação de Sistema
-                if prioridade_rec in ['ALTA', 'URGENTE']:
-                    Notificacao.objects.create(
-                        usuario=request.user,
-                        mensagem=f"Alerta crítico na cultura de {cultura_nome.capitalize()}: Índices fora da janela ideal!",
-                        lida=False
-                    )
-
-                messages.success(request, 'Sucesso! Registros distribuídos e salvos em todos os módulos correlacionados.')
-                return redirect('monitoramento')
-
-            except ValueError:
-                erro = "Por favor, insira numerações válidas nos campos de medição."
+        # =========================
+        # 2. FALLBACK EMBRAPA
+        # =========================
+        if obj_cultura:
+            referencia = {
+                "umidade_ideal": (obj_cultura.umidade_min, obj_cultura.umidade_max),
+                "ph_ideal": (obj_cultura.ph_min, obj_cultura.ph_max),
+                "temperatura_ideal": (obj_cultura.temperatura_min, obj_cultura.temperatura_max),
+                "descricao": obj_cultura.descricao,
+                "fonte": obj_cultura.fonte
+            }
         else:
-            erro = "Preencha todos os campos do formulário para prosseguir."
+            referencia = {
+                "umidade_ideal": (40, 60),
+                "ph_ideal": (5.5, 6.5),
+                "temperatura_ideal": (20, 30),
+                "descricao": "Cultura sem base cadastrada no sistema.",
+                "fonte": "Sistema padrão"
+            }
 
-    # Coleta para exibição na página
+        # =========================
+        # 3. DADOS DO SOLO
+        # =========================
+        dados_solo = {
+            "umidade": umidade,
+            "ph": ph,
+            "temperatura": temperatura
+        }
+
+        # =========================
+        # 4. IA GEMINI
+        # =========================
+        relatorio = gerar_relatorio_ia(
+            cultura=cultura_nome,
+            dados_solo=dados_solo,
+            referencia_embrapa=referencia
+        )
+
+        # =========================
+        # 5. SALVAR
+        # =========================
+        Analise.objects.create(
+            usuario=request.user,
+            cultura=cultura_nome,
+            umidade=umidade,
+            ph=ph,
+            temperatura=temperatura,
+            recomendacao=relatorio
+        )
+
+        # =========================
+        # 6. NOTIFICAÇÃO
+        # =========================
+        Notificacao.objects.create(
+            usuario=request.user,
+            mensagem=f"Relatório IA gerado para {cultura_nome}",
+            lida=False
+        )
+
+        messages.success(request, "Relatório inteligente gerado com sucesso!")
+        return redirect("monitoramento")
+
+    # =========================
+    # GET (TELA)
+    # =========================
     analises = Analise.objects.filter(usuario=request.user).order_by("-id")
-    ultima_analise = analises.first() if analises.exists() else None
+    ultima_analise = analises.first()
 
     ph_porcentagem = (float(ultima_analise.ph) / 14.0) * 100 if ultima_analise else 0
     temp_porcentagem = (float(ultima_analise.temperatura) / 50.0) * 100 if ultima_analise else 0
 
-    context = {
-        "notificacoes_nao_lidas": notificacoes_nao_lidas,
+    return render(request, "monitoramento/monitoramento.html", {
         "analises": analises,
         "ultima_analise": ultima_analise,
+        "notificacoes": notificacoes,
+        "notificacoes_nao_lidas": notificacoes_nao_lidas,
         "ph_porcentagem": ph_porcentagem,
         "temp_porcentagem": temp_porcentagem,
         "erro": erro
-    }
-    return render(request, "monitoramento/monitoramento.html", context)
+    })
+# =========================================================
+# NOTIFICAÇÕES
+# =========================================================
+@login_required
+def detalhe_notificacao(request, notificacao_id):
+    notificacao = get_object_or_404(
+        Notificacao,
+        id=notificacao_id,
+        usuario=request.user
+    )
+    notificacao.lida = True
+    notificacao.save()
+
+    return render(request, "monitoramento/notificacao.html", {"notificacao": notificacao})
+
+
+@login_required
+def marcar_todas_lidas(request):
+    Notificacao.objects.filter(usuario=request.user, lida=False).update(lida=True)
+    return redirect(request.META.get("HTTP_REFERER", "/"))
+
+
+# =========================================================
+# GESTÃO AGRÍCOLA (CORRIGIDA)
+# =========================================================
+@login_required
+def gestao_agricola(request):
+
+    if request.method == "POST":
+        tipo = request.POST.get("tipo")
+
+        # PRODUTOR
+        if tipo == "produtor":
+            produtor = Produtor.objects.create(
+                usuario=request.user,
+                nome=request.POST.get("nome"),
+                cpf=request.POST.get("cpf"),
+                telefone=request.POST.get("telefone"),
+                email=request.POST.get("email")
+            )
+
+            Notificacao.objects.create(
+                usuario=request.user,
+                mensagem=f"Novo produtor cadastrado: {produtor.nome}",
+                lida=False
+            )
+
+        # PROPRIEDADE
+        elif tipo == "propriedade":
+            produtor = get_object_or_404(
+                Produtor,
+                id=request.POST.get("produtor"),
+                usuario=request.user
+            )
+
+            propriedade = Propriedade.objects.create(
+                produtor=produtor,
+                nome=request.POST.get("nome"),
+                localizacao=request.POST.get("localizacao"),
+                tamanho_hectares=request.POST.get("hectares")
+            )
+
+            Notificacao.objects.create(
+                usuario=request.user,
+                mensagem=f"Nova propriedade cadastrada: {propriedade.nome}",
+                lida=False
+            )
+
+        # IRRIGAÇÃO
+        elif tipo == "irrigacao":
+            propriedade = get_object_or_404(
+                Propriedade,
+                id=request.POST.get("propriedade"),
+                produtor__usuario=request.user
+            )
+
+            irrigacao = Irrigacao.objects.create(
+                propriedade=propriedade,
+                quantidade_agua=request.POST.get("agua"),
+                horario=request.POST.get("horario"),
+                observacao=request.POST.get("observacao"),
+                automatica="automatica" in request.POST
+            )
+
+            Notificacao.objects.create(
+                usuario=request.user,
+                mensagem=f"Irrigação registrada: {irrigacao.quantidade_agua}L",
+                lida=False
+            )
+
+        # REGISTRO
+        elif tipo == "registro":
+            propriedade = get_object_or_404(
+                Propriedade,
+                id=request.POST.get("propriedade"),
+                produtor__usuario=request.user
+            )
+
+            registro = RegistroAgricola.objects.create(
+                propriedade=propriedade,
+                descricao=request.POST.get("descricao")
+            )
+
+            Notificacao.objects.create(
+                usuario=request.user,
+                mensagem=f"Registro agrícola criado em {propriedade.nome}",
+                lida=False
+            )
+
+        messages.success(request, "Registro salvo com sucesso!")
+        return redirect("gestao_agricola")
+
+    return render(request, "monitoramento/gestao.html", {
+        "produtores": Produtor.objects.filter(usuario=request.user),
+        "propriedades": Propriedade.objects.filter(produtor__usuario=request.user),
+        "irrigacoes": Irrigacao.objects.filter(propriedade__produtor__usuario=request.user).order_by("-id")[:10],
+        "registros": RegistroAgricola.objects.filter(propriedade__produtor__usuario=request.user).order_by("-id")[:10],
+    })

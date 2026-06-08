@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Notificação
+{% endblock %}
+
+{% block content %}
+
+<div style="padding:150px 50px;">
+
+    <h1>Notificação</h1>
+
+    <div style="
+        margin-top:20px;
+        padding:30px;
+        border-radius:20px;
+        background:rgba(255,255,255,.05);
+        border:1px solid rgba(255,255,255,.1);
+    ">
+
+        <h3>Mensagem</h3>
+
+        <p>
+            {{ notificacao.mensagem }}
+        </p>
+
+        <hr>
+
+        <small>
+            Recebida em:
+            {{ notificacao.data_envio|date:"d/m/Y H:i" }}
+        </small>
+
+    </div>
+
+</div>
+
+{% endblock %}

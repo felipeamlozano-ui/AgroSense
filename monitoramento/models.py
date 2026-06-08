@@ -44,12 +44,21 @@ class Usuario(AbstractUser):
 # =========================================================
 # PRODUTOR
 # =========================================================
+
+from django.conf import settings
+
 class Produtor(models.Model):
+
+    usuario = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="produtores"
+    )
+
     nome = models.CharField(max_length=150)
     cpf = models.CharField(max_length=14, unique=True)
     telefone = models.CharField(max_length=20)
     email = models.EmailField(unique=True)
-    data_cadastro = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.nome
@@ -88,25 +97,33 @@ class Cultura(models.Model):
 
 
 # =========================================================
-# CULTURA MONITORADA
+# CULTURA AGRICOLA
 # =========================================================
-class CulturaMonitorada(models.Model):
-    cultura = models.ForeignKey(
-        Cultura,
-        on_delete=models.CASCADE,
-        related_name='monitoramentos'
+from django.db import models
+
+class CulturaAgricola(models.Model):
+    nome = models.CharField(max_length=120, unique=True)
+
+    umidade_min = models.FloatField()
+    umidade_max = models.FloatField()
+
+    ph_min = models.FloatField()
+    ph_max = models.FloatField()
+
+    temperatura_min = models.FloatField()
+    temperatura_max = models.FloatField()
+
+    descricao = models.TextField(blank=True)
+
+    fonte = models.CharField(
+        max_length=50,
+        default="EMBRAPA"
     )
-    propriedade = models.ForeignKey(
-        Propriedade,
-        on_delete=models.CASCADE,
-        related_name='culturas_monitoradas'
-    )
-    data_inicio = models.DateField()
-    ativa = models.BooleanField(default=True)
+
+    atualizado_em = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"{self.cultura.nome} - {self.propriedade.nome}"
-
+        return self.nome
 
 # =========================================================
 # UMIDADE DO SOLO

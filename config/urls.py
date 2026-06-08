@@ -16,6 +16,7 @@ urlpatterns = [
         '',
         include('monitoramento.urls')
     ),
+    
 
 ]
 

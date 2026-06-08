@@ -4,7 +4,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>{% block title %}Neural AI{% endblock %}</title>
+    <title>{% block title %}AGROSENSE{% endblock %}</title>
 
     <meta name="theme-color" content="#050816" />
     <meta name="description" content="Futuristic AI/Web3 Interface" />
@@ -22,7 +22,7 @@
         <div class="loader-ring"></div>
         <div class="loader-ring delay"></div>
         <div class="loader-core"></div>
-        <h1 class="loader-text">NEURAL</h1>
+        <h1 class="loader-text">AGROSENSE</h1>
       </div>
     </div>
 
@@ -37,6 +37,9 @@
           <a href="{% url 'index' %}">Sistema</a>
         <a href="{% url 'monitoramento' %}">Monitoramento</a>
         <a href="{% url 'login' %}">Login</a>
+        <a href="{% url 'gestao_agricola' %}">
+          Gestão Agrícola
+      </a>
         </nav>
 
         <div class="nav-actions" style="text-align:center">
@@ -52,22 +55,56 @@
             </button>
 
             <div class="notification-dropdown" id="notificationDropdown">
+
               <div class="notification-header">
                 <strong>Notificações</strong>
-                <span class="mark-all">Marcar como lidas</span>
+            
+                <a
+                  href="{% url 'marcar_todas_lidas' %}"
+                  style="font-size:12px;color:#00ffbf;text-decoration:none;"
+                >
+                  Marcar todas
+                </a>
               </div>
+            
               <div class="notification-list">
+            
                 {% if user.is_authenticated and notificacoes %}
+            
                   {% for n in notificacoes %}
-                    <div class="notification-item {% if not n.lida %}unread{% endif %}">
-                      <div class="dot"></div>
-                      <div class="text">{{ n.mensagem }}<small>{{ n.data_envio|timesince }} atrás</small></div>
+            
+                  <a
+                    href="{% url 'detalhe_notificacao' n.id %}"
+                    class="notification-item {% if not n.lida %}unread{% endif %}"
+                    style="text-decoration:none;color:inherit;"
+                  >
+                    <div class="dot"></div>
+            
+                    <div class="text">
+                      {{ n.mensagem }}
+            
+                      <br>
+            
+                      <small>
+                        {{ n.data_envio|timesince }} ago
+                      </small>
                     </div>
+                  </a>
+            
                   {% endfor %}
+            
                 {% else %}
-                  <div class="notification-item"><div class="text">Nenhuma notificação</div></div>
+            
+                  <div class="notification-item">
+                    <div class="text">
+                      Nenhuma notificação
+                    </div>
+                  </div>
+            
                 {% endif %}
+            
               </div>
+            
             </div>
           </div>
 
