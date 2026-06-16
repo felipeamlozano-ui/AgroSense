@@ -2,6 +2,16 @@
 <!DOCTYPE html>
 <html lang="pt-br">
   <head>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          // Chamando '/sw.js' em vez de '{% static ... %}'
+          navigator.serviceWorker.register("/sw.js")
+            .then(reg => console.log('AgroSense PWA Ativo no escopo raiz!', reg.scope))
+            .catch(err => console.log('Falha ao registrar PWA:', err));
+        });
+      }
+    </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{% block title %}AGROSENSE{% endblock %}</title>
@@ -13,6 +23,11 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="{% static 'css/base.css' %}" />
+    <!-- Dentro da tag <head> do seu base.html -->
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    
+    <!-- ADICIONE ESTA LINHA: Carrega a folha mobile e PWA -->
+    <link rel="stylesheet" href="{% static 'css/pwa-mobile.css' %}">
     {% block extra_css %}{% endblock %}
   </head>
 

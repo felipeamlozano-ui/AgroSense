@@ -2,16 +2,18 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.views import LoginView
 from django.contrib.auth import login, get_user_model
 from django.contrib import messages
+from decimal import Decimal
 from django.utils import timezone
+from .models import ScoreAgronomico
+import json
+from django.db.models import Avg
 from django.contrib.auth.decorators import login_required
-from .ia.base_embrapa import EMBRAPA_DADOS
-from .ia.gemini_service import gerar_relatorio_ia
+from .ia.service import gerar_relatorio_ia
 from .forms import CustomLoginForm, CustomUserCreationForm
 from .models import (
     Analise, Cultura, Propriedade, UmidadeSolo, TemperaturaSolo,
-    PhSolo, Recomendacao, AnaliseSolo,
-    Historico, Relatorio, Notificacao,
-    Produtor, Irrigacao, RegistroAgricola
+    PhSolo, Recomendacao, Notificacao,
+    Usuario, Irrigacao,
 )
 
 Usuario = get_user_model()
@@ -113,37 +115,43 @@ def safe_float(value, default=0.0):
 @login_required
 def monitoramento(request):
 
-    if not request.user.is_authenticated:
-        return redirect("/?erro=login")
+    notificacoes = request.user.notificacoes.filter(
+        lida=False
+    ).order_by("-data_envio")
 
-    notificacoes = request.user.notificacoes.filter(lida=False).order_by("-data_envio")
     notificacoes_nao_lidas = notificacoes.count()
 
     erro = None
 
     if request.method == "POST":
 
-        cultura_nome = (request.POST.get("cultura") or "desconhecida").strip().capitalize()
+        cultura_nome = (
+            request.POST.get("cultura")
+            or "desconhecida"
+        ).strip().capitalize()
 
-        umidade = safe_float(request.POST.get("umidade"))
+        umidade = UmidadeSolo.objects.last().valor
         ph = safe_float(request.POST.get("ph"))
         temperatura = safe_float(request.POST.get("temperatura"))
 
-        # =========================
-        # 1. BUSCA CULTURA NO BANCO
-        # =========================
         obj_cultura = CulturaAgricola.objects.filter(
             nome__iexact=cultura_nome
         ).first()
 
-        # =========================
-        # 2. FALLBACK EMBRAPA
-        # =========================
         if obj_cultura:
             referencia = {
-                "umidade_ideal": (obj_cultura.umidade_min, obj_cultura.umidade_max),
-                "ph_ideal": (obj_cultura.ph_min, obj_cultura.ph_max),
-                "temperatura_ideal": (obj_cultura.temperatura_min, obj_cultura.temperatura_max),
+                "umidade_ideal": (
+                    obj_cultura.umidade_min,
+                    obj_cultura.umidade_max
+                ),
+                "ph_ideal": (
+                    obj_cultura.ph_min,
+                    obj_cultura.ph_max
+                ),
+                "temperatura_ideal": (
+                    obj_cultura.temperatura_min,
+                    obj_cultura.temperatura_max
+                ),
                 "descricao": obj_cultura.descricao,
                 "fonte": obj_cultura.fonte
             }
@@ -156,66 +164,111 @@ def monitoramento(request):
                 "fonte": "Sistema padrão"
             }
 
-        # =========================
-        # 3. DADOS DO SOLO
-        # =========================
         dados_solo = {
             "umidade": umidade,
             "ph": ph,
             "temperatura": temperatura
         }
 
-        # =========================
-        # 4. IA GEMINI
-        # =========================
         relatorio = gerar_relatorio_ia(
             cultura=cultura_nome,
             dados_solo=dados_solo,
             referencia_embrapa=referencia
         )
 
-        # =========================
-        # 5. SALVAR
-        # =========================
-        Analise.objects.create(
-            usuario=request.user,
-            cultura=cultura_nome,
-            umidade=umidade,
-            ph=ph,
-            temperatura=temperatura,
-            recomendacao=relatorio
+        # 1. Cultura
+        cultura_obj, _ = Cultura.objects.get_or_create(
+            nome=cultura_nome,
+            defaults={"descricao": ""}
         )
 
-        # =========================
-        # 6. NOTIFICAÇÃO
-        # =========================
+        # 2. Sensores
+        umidade_obj = UmidadeSolo.objects.create(
+            valor=umidade,
+            classificacao="MEDIA"
+        )
+
+        ph_obj = PhSolo.objects.create(
+            valor=ph,
+            classificacao="NEUTRO" if 5.5 <= ph <= 7.5 else "ACIDO"
+        )
+
+        temp_obj = TemperaturaSolo.objects.create(
+            valor=temperatura,
+            classificacao="IDEAL"
+        ) 
+
+        # 3. Recomendação
+        recomendacao_obj = Recomendacao.objects.create(
+            titulo=f"Relatório IA - {cultura_nome}",
+            descricao=relatorio,
+            prioridade="MEDIA"
+        )
+
+        # 4. Analise principal
+        umidade = Decimal(request.POST.get('umidade'))
+        ph = Decimal(request.POST.get('ph'))
+        temperatura = Decimal(request.POST.get('temperatura'))
+
+        analise = Analise.objects.create(
+            usuario=request.user,
+            cultura=cultura_obj,
+            umidade=umidade,
+            ph=ph,  # Aqui você salva o número direto, por isso no GET não se usa .valor
+            temperatura=temperatura,
+            recomendacao=recomendacao_obj,
+            score=round((umidade + ph + temperatura) / Decimal("3")),
+            classificacao="REGULAR"
+        )
+
+        # 5. Histórico de score
+        ScoreAgronomico.objects.create(
+            analise=analise,
+            valor=analise.score
+        )
+
         Notificacao.objects.create(
             usuario=request.user,
             mensagem=f"Relatório IA gerado para {cultura_nome}",
             lida=False
         )
 
-        messages.success(request, "Relatório inteligente gerado com sucesso!")
+        messages.success(
+            request,
+            "Relatório inteligente gerado com sucesso!"
+        )
+
         return redirect("monitoramento")
 
-    # =========================
-    # GET (TELA)
-    # =========================
-    analises = Analise.objects.filter(usuario=request.user).order_by("-id")
+    analises = Analise.objects.filter(
+        usuario=request.user
+    ).order_by("-id")
+
     ultima_analise = analises.first()
 
-    ph_porcentagem = (float(ultima_analise.ph) / 14.0) * 100 if ultima_analise else 0
-    temp_porcentagem = (float(ultima_analise.temperatura) / 50.0) * 100 if ultima_analise else 0
+    ph_porcentagem = (
+        (float(ultima_analise.ph) / 14.0) * 100
+        if ultima_analise else 0
+    )
 
-    return render(request, "monitoramento/monitoramento.html", {
-        "analises": analises,
-        "ultima_analise": ultima_analise,
-        "notificacoes": notificacoes,
-        "notificacoes_nao_lidas": notificacoes_nao_lidas,
-        "ph_porcentagem": ph_porcentagem,
-        "temp_porcentagem": temp_porcentagem,
-        "erro": erro
-    })
+    temp_porcentagem = (
+        (float(ultima_analise.temperatura) / 50.0) * 100
+        if ultima_analise else 0
+    )
+
+    return render(
+        request,
+        "monitoramento/monitoramento.html",
+        {
+            "analises": analises,
+            "ultima_analise": ultima_analise,
+            "notificacoes": notificacoes,
+            "notificacoes_nao_lidas": notificacoes_nao_lidas,
+            "ph_porcentagem": ph_porcentagem,
+            "temp_porcentagem": temp_porcentagem,
+            "erro": erro
+        }
+    )
 # =========================================================
 # NOTIFICAÇÕES
 # =========================================================
@@ -244,38 +297,23 @@ def marcar_todas_lidas(request):
 @login_required
 def gestao_agricola(request):
 
+    # =========================
+    # POST (cadastros)
+    # =========================
     if request.method == "POST":
         tipo = request.POST.get("tipo")
 
-        # PRODUTOR
-        if tipo == "produtor":
-            produtor = Produtor.objects.create(
-                usuario=request.user,
-                nome=request.POST.get("nome"),
-                cpf=request.POST.get("cpf"),
-                telefone=request.POST.get("telefone"),
-                email=request.POST.get("email")
-            )
-
-            Notificacao.objects.create(
-                usuario=request.user,
-                mensagem=f"Novo produtor cadastrado: {produtor.nome}",
-                lida=False
-            )
-
+        # -----------------
         # PROPRIEDADE
-        elif tipo == "propriedade":
-            produtor = get_object_or_404(
-                Produtor,
-                id=request.POST.get("produtor"),
-                usuario=request.user
-            )
-
+        # -----------------
+        if tipo == "propriedade":
             propriedade = Propriedade.objects.create(
-                produtor=produtor,
+                usuario=request.user,
                 nome=request.POST.get("nome"),
                 localizacao=request.POST.get("localizacao"),
-                tamanho_hectares=request.POST.get("hectares")
+                tamanho_hectares=request.POST.get("hectares"),
+                cultura_principal=request.POST.get("cultura"),
+                data_plantio=request.POST.get("data_plantio") or None
             )
 
             Notificacao.objects.create(
@@ -284,16 +322,20 @@ def gestao_agricola(request):
                 lida=False
             )
 
+        # -----------------
         # IRRIGAÇÃO
+        # -----------------
         elif tipo == "irrigacao":
             propriedade = get_object_or_404(
                 Propriedade,
                 id=request.POST.get("propriedade"),
-                produtor__usuario=request.user
+                usuario=request.user
             )
 
-            irrigacao = Irrigacao.objects.create(
+            Irrigacao.objects.create(
                 propriedade=propriedade,
+                cultura=request.POST.get("cultura"),
+                area_irrigada=request.POST.get("area"),
                 quantidade_agua=request.POST.get("agua"),
                 horario=request.POST.get("horario"),
                 observacao=request.POST.get("observacao"),
@@ -302,19 +344,21 @@ def gestao_agricola(request):
 
             Notificacao.objects.create(
                 usuario=request.user,
-                mensagem=f"Irrigação registrada: {irrigacao.quantidade_agua}L",
+                mensagem=f"Irrigação registrada com sucesso",
                 lida=False
             )
 
-        # REGISTRO
+        # -----------------
+        # REGISTRO AGRÍCOLA
+        # -----------------
         elif tipo == "registro":
             propriedade = get_object_or_404(
                 Propriedade,
                 id=request.POST.get("propriedade"),
-                produtor__usuario=request.user
+                usuario=request.user
             )
 
-            registro = RegistroAgricola.objects.create(
+            RegistroAgricola.objects.create(
                 propriedade=propriedade,
                 descricao=request.POST.get("descricao")
             )
@@ -328,9 +372,117 @@ def gestao_agricola(request):
         messages.success(request, "Registro salvo com sucesso!")
         return redirect("gestao_agricola")
 
-    return render(request, "monitoramento/gestao.html", {
-        "produtores": Produtor.objects.filter(usuario=request.user),
-        "propriedades": Propriedade.objects.filter(produtor__usuario=request.user),
-        "irrigacoes": Irrigacao.objects.filter(propriedade__produtor__usuario=request.user).order_by("-id")[:10],
-        "registros": RegistroAgricola.objects.filter(propriedade__produtor__usuario=request.user).order_by("-id")[:10],
-    })
+    # =========================
+    # GET (dashboard)
+    # =========================
+
+    propriedades = Propriedade.objects.filter(
+        usuario=request.user
+    )
+
+    irrigacoes = Irrigacao.objects.filter(
+        propriedade__usuario=request.user
+    ).order_by("-id")[:10]
+
+    analises = Analise.objects.filter(
+        usuario=request.user
+    ).order_by("-id")
+
+    total_analises = analises.count()
+
+    score_medio = (
+        sum(a.score for a in analises) / analises.count()
+        if analises.exists() else 0
+    )
+
+    alertas_criticos = sum(
+        1 for a in analises
+            if a.ph < 5.5 or a.ph > 7.5
+    )
+
+    ultimas_analises = analises.order_by("-data_analise")[:10]
+    # =========================
+    # GRÁFICO ANÁLISES
+    # =========================
+    grafico_datas = [
+    a.data_analise.strftime("%d/%m")
+        for a in reversed(ultimas_analises)
+    ]
+
+    grafico_potencial = [
+        float(a.ph or 0)
+        for a in reversed(ultimas_analises)
+    ]
+    score_dados = [
+    {
+        "data": a.data_analise.strftime("%d/%m") if a.data_analise else "",
+        "score": float(score_medio or 0)  # substitui depois se tiver score real
+    }
+    for a in reversed(analises.order_by("-data_analise")[:10])
+    ]
+
+    # =========================
+    # GRÁFICO IRRIGAÇÃO
+    # =========================
+    agua_labels = [
+        i.horario.strftime("%d/%m")
+        for i in reversed(irrigacoes)
+    ]
+
+    agua_dados = [
+        float(i.quantidade_agua)
+        for i in reversed(irrigacoes)
+    ]
+
+    # =========================
+    # RECOMENDAÇÕES (CORRIGIDO)
+    # =========================
+    recomendacoes = [
+        a.recomendacao
+        for a in analises
+        if a.recomendacao
+    ][:5]
+
+    return render(
+    request,
+    "monitoramento/gestao.html",
+    {
+        "propriedades": propriedades,
+        "irrigacoes": irrigacoes,
+
+        "analises": analises,
+        "total_analises": total_analises,
+        "score_medio": round(score_medio, 2),
+        "alertas_criticos": alertas_criticos,
+
+        "ultima_analise": ultimas_analises.first(),
+        "ultimas_analises": analises[:10],
+
+        "grafico_datas": json.dumps(grafico_datas),
+        "grafico_potencial": json.dumps(grafico_potencial),
+        "grafico_score": json.dumps({
+            "chartType": "line",
+            "meta": {
+                "title": "Evolução do Score",
+                "description": "Variação do score das análises ao longo do tempo."
+            },
+            "xKey": "data",
+            "xAxisLabel": "Data",
+            "series": [
+            {
+                "dataKey": "score",
+                "label": "Score",
+                "valueFormat": "integer"
+            }
+        ],
+            "data": score_dados
+        }),
+        "agua_labels": json.dumps(agua_labels),
+        "agua_dados": json.dumps(agua_dados),
+
+        "recomendacoes": recomendacoes,
+
+        "notificacoes": request.user.notificacoes.filter(lida=False),
+        "notificacoes_nao_lidas": request.user.notificacoes.filter(lida=False).count(),
+    }
+)

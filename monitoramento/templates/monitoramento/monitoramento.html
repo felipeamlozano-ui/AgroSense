@@ -212,12 +212,10 @@
       </div>
 
       <div class="recomendacao-box">
-        <div class="recomendacao-box">
-          <h3>Recomendação da Inteligência Artificial</h3>
-          <div class="recomendacao-texto">
-              {{ ultima_analise.recomendacao|linebreaks }}
-          </div>
-      </div>
+        <h3>Recomendação da Inteligência Artificial</h3>
+        <div class="recomendacao-texto">
+          {{ ultima_analise.recomendacao.descricao|linebreaks }}
+        </div>
       </div>
     </div>
 
@@ -241,7 +239,7 @@
               <td>{{ a.umidade }}%</td>
               <td>{{ a.ph }}</td>
               <td>{{ a.temperatura }}°C</td>
-              <td><small>{{ a.recomendacao }}</small></td>
+              <td><small>{{ a.recomendacao.descricao }}</small></td>
             </tr>
             {% endfor %}
           </tbody>
